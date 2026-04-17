@@ -910,3 +910,75 @@ snippetsList.addEventListener('click', async (e) => {
 
 // Initial snippet load (tasks already loaded above)
 loadSnippets();
+
+// =============================================
+// Settings (热角位置)
+// =============================================
+const btnSettings = document.getElementById('btnSettings');
+const settingsPopover = document.getElementById('settingsPopover');
+const footerHint = document.getElementById('footerHint');
+
+const CORNER_LABELS = {
+  'top-left': '左上角',
+  'top-right': '右上角',
+  'bottom-left': '左下角',
+  'bottom-right': '右下角',
+};
+
+let currentCorner = 'top-left';
+
+function updateCornerUI() {
+  // Highlight active button
+  document.querySelectorAll('.corner-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.corner === currentCorner);
+  });
+  // Update footer hint
+  if (footerHint) {
+    footerHint.textContent = `鼠标移到屏幕${CORNER_LABELS[currentCorner]}唤起 · 离开自动收起`;
+  }
+}
+
+async function loadSettings() {
+  const settings = await window.api.getSettings();
+  currentCorner = settings?.cornerTrigger || 'top-left';
+  updateCornerUI();
+  // Apply slide direction to panel immediately
+  applySide(currentCorner.endsWith('-right') ? 'right' : 'left');
+}
+
+function applySide(side) {
+  if (side === 'right') {
+    panel.classList.add('side-right');
+  } else {
+    panel.classList.remove('side-right');
+  }
+}
+
+btnSettings.addEventListener('click', (e) => {
+  e.stopPropagation();
+  settingsPopover.classList.toggle('hidden');
+});
+
+document.querySelectorAll('.corner-btn').forEach(btn => {
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const corner = btn.dataset.corner;
+    if (corner === currentCorner) return;
+    currentCorner = corner;
+    await window.api.updateSettings({ cornerTrigger: corner });
+    updateCornerUI();
+    applySide(corner.endsWith('-right') ? 'right' : 'left');
+  });
+});
+
+// Close settings popover when clicking outside
+document.addEventListener('click', (e) => {
+  if (!settingsPopover.contains(e.target) && !btnSettings.contains(e.target)) {
+    settingsPopover.classList.add('hidden');
+  }
+});
+
+// Listen for panel side changes from main process (e.g. display metrics changed)
+window.api.onPanelSide((side) => applySide(side));
+
+loadSettings();

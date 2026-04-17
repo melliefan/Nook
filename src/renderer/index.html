@@ -177,8 +177,32 @@
       <div class="toast hidden" id="toast">已复制</div>
 
       <footer class="footer">
-        <span class="footer-hint">鼠标移到左上角唤起 · 离开自动收起</span>
+        <span class="footer-hint" id="footerHint">鼠标移到左上角唤起 · 离开自动收起</span>
+        <button class="footer-settings-btn" id="btnSettings" title="设置">
+          <span data-icon="settings" data-icon-size="14"></span>
+        </button>
       </footer>
+
+      <!-- 设置弹层 -->
+      <div class="settings-popover hidden" id="settingsPopover">
+        <div class="settings-section">
+          <div class="settings-label">热角触发位置</div>
+          <div class="settings-corner-grid">
+            <button class="corner-btn" data-corner="top-left">
+              <span class="corner-diagram tl"></span><span>左上</span>
+            </button>
+            <button class="corner-btn" data-corner="top-right">
+              <span class="corner-diagram tr"></span><span>右上</span>
+            </button>
+            <button class="corner-btn" data-corner="bottom-left">
+              <span class="corner-diagram bl"></span><span>左下</span>
+            </button>
+            <button class="corner-btn" data-corner="bottom-right">
+              <span class="corner-diagram br"></span><span>右下</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ===== 详情视图 ===== -->

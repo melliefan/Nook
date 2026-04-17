@@ -28,6 +28,10 @@ contextBridge.exposeInMainWorld('api', {
   deleteSnippet: (id) => ipcRenderer.invoke('snippets:delete', id),
   reorderSnippet: (id, targetIndex) => ipcRenderer.invoke('snippets:reorder', id, targetIndex),
 
+  // Settings
+  getSettings: () => ipcRenderer.invoke('settings:get'),
+  updateSettings: (updates) => ipcRenderer.invoke('settings:update', updates),
+
   // Meta
   getStorePath: () => ipcRenderer.invoke('store:getPath'),
 
@@ -35,4 +39,5 @@ contextBridge.exposeInMainWorld('api', {
   requestHide: () => ipcRenderer.send('panel:requestHide'),
   onPanelShow: (cb) => ipcRenderer.on('panel:show', cb),
   onPanelHide: (cb) => ipcRenderer.on('panel:hide', cb),
+  onPanelSide: (cb) => ipcRenderer.on('panel:side', (_, side) => cb(side)),
 });

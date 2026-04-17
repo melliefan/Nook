@@ -43,7 +43,11 @@ class Store {
     } catch (e) {
       console.error('[Store] Failed to load:', e);
     }
-    return { tasks: [], nextId: 1, tags: {}, snippets: [], nextSnippetId: 1 };
+    return {
+      tasks: [], nextId: 1,
+      tags: {}, snippets: [], nextSnippetId: 1,
+      settings: { cornerTrigger: 'top-left' },
+    };
   }
 
   _migrate() {
@@ -60,6 +64,8 @@ class Store {
     if (!this.data.tags) { this.data.tags = {}; changed = true; }
     if (!this.data.snippets) { this.data.snippets = []; changed = true; }
     if (!this.data.nextSnippetId) { this.data.nextSnippetId = 1; changed = true; }
+    if (!this.data.settings) { this.data.settings = {}; changed = true; }
+    if (!this.data.settings.cornerTrigger) { this.data.settings.cornerTrigger = 'top-left'; changed = true; }
 
     for (const task of this.data.tasks) {
       if (!task.priority) { task.priority = 'none'; changed = true; }
@@ -260,6 +266,18 @@ class Store {
     const [s] = this.data.snippets.splice(idx, 1);
     this.data.snippets.splice(targetIndex, 0, s);
     this._save();
+  }
+
+  // ======= Settings =======
+
+  getSettings() {
+    return this.data.settings;
+  }
+
+  updateSettings(updates) {
+    Object.assign(this.data.settings, updates);
+    this._save();
+    return this.data.settings;
   }
 }
 
