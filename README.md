@@ -4,7 +4,16 @@
 >
 > 作者 [melliefan](https://github.com/melliefan) · UI 风格参考滴答清单浅色模式。
 
-![平台](https://img.shields.io/badge/平台-macOS-lightgrey) ![electron](https://img.shields.io/badge/electron-37-blue) ![协议](https://img.shields.io/badge/协议-MIT-green)
+![平台](https://img.shields.io/badge/平台-macOS-lightgrey) ![electron](https://img.shields.io/badge/electron-37-blue) ![协议](https://img.shields.io/badge/协议-MIT-green) [![下载](https://img.shields.io/github/v/release/melliefan/Nook?label=下载&color=brightgreen)](https://github.com/melliefan/Nook/releases/latest)
+
+## 下载安装
+
+从 [Releases 页面](https://github.com/melliefan/Nook/releases/latest) 下载对应架构的 DMG：
+
+- **Apple Silicon（M1 / M2 / M3 / M4）**：`Nook-x.x.x-arm64.dmg`
+- **Intel Mac**：`Nook-x.x.x.dmg`
+
+双击 DMG → 拖 `Nook.app` 到 Applications → 首次打开右键 → 「打开」。
 
 ## 功能特性
 
