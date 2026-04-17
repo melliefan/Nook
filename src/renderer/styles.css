@@ -1,13 +1,14 @@
 /* =============================================
    滴答清单 Light Mode 完整实现
-   品牌蓝: #4772FA | 文字: rgba(25,25,25,x)
+   品牌蓝: #595959 | 文字: rgba(25,25,25,x)
    ============================================= */
 
 :root {
-  --brand: #4772FA;
-  --brand-hover: #3E60CD;
-  --brand-bg: rgba(71, 114, 250, 0.1);
-  --brand-bg-hover: rgba(71, 114, 250, 0.15);
+  /* 主色调：从品牌蓝改为中性灰 */
+  --brand: #595959;
+  --brand-hover: #3D3D3D;
+  --brand-bg: rgba(89, 89, 89, 0.08);
+  --brand-bg-hover: rgba(89, 89, 89, 0.14);
 
   --priority-high: #EB4D3D;
   --priority-medium: #FF9A14;
@@ -17,7 +18,7 @@
   --bg-primary: #FFFFFF;
   --bg-sidebar: #FAFAFA;
   --bg-hover: rgba(25, 25, 25, 0.03);
-  --bg-active: rgba(71, 114, 250, 0.1);
+  --bg-active: rgba(89, 89, 89, 0.08);
 
   --text-title: #191919;
   --text-primary: rgba(25, 25, 25, 0.8);
@@ -139,25 +140,6 @@ body {
 }
 .icon-btn:hover { background: var(--bg-hover); color: var(--icon); }
 
-/* ======= Search Bar ======= */
-.search-bar {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 16px; border-bottom: 1px solid var(--border);
-  background: var(--bg-sidebar); color: var(--text-secondary);
-}
-.search-input {
-  flex: 1; border: none; outline: none; background: transparent;
-  font-size: 13px; color: var(--text-title); font-family: var(--font);
-}
-.search-input::placeholder { color: var(--text-placeholder); }
-.search-clear {
-  width: 20px; height: 20px; border: none; background: transparent;
-  color: var(--text-placeholder); cursor: pointer; display: flex;
-  align-items: center; justify-content: center; border-radius: 50%;
-  transition: all 0.12s;
-}
-.search-clear:hover { background: var(--bg-hover); color: var(--text-secondary); }
-
 /* ======= Tag Filter Bar ======= */
 .tag-filter-bar {
   padding: 8px 16px; border-bottom: 1px solid var(--border);
@@ -223,7 +205,7 @@ body {
 .add-task-input-area {
   border: 1.5px solid var(--brand); border-radius: var(--radius-md);
   background: var(--bg-primary); overflow: visible;
-  box-shadow: 0 2px 8px rgba(71, 114, 250, 0.12);
+  box-shadow: 0 2px 8px rgba(89, 89, 89, 0.1);
   position: relative;
 }
 .add-task-input-wrap { padding: 10px 12px 6px; }
@@ -793,48 +775,35 @@ body {
 .snippets-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
 
 .snippet-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 14px;
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 7px 14px;
   cursor: pointer; transition: background 0.12s;
   position: relative;
   color: var(--text-title);
+  min-width: 0;
 }
 .snippet-item:hover { background: var(--bg-hover); }
 .snippet-item:hover .snippet-actions { opacity: 1; }
 .snippet-item.copied { background: rgba(81, 207, 102, 0.1); }
-.snippet-item:hover .snippet-actions { opacity: 1; }
-/* Row number prefix — plain gray number, minimal. */
+
+/* Snippet single-line display: 序号 + 内容 */
+.snippet-value-only {
+  font-size: 13px;
+  color: var(--text-title);
+  line-height: 1.4;
+  flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .snippet-index {
   font-size: 12px;
   color: var(--text-placeholder);
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  min-width: 14px;
+  min-width: 16px;
   text-align: right;
   flex-shrink: 0;
 }
 
-/* Single-line display: if snippet has a name, show name; otherwise show value (mono / masked). */
-.snippet-primary {
-  font-size: 13px;
-  color: var(--text-title);        /* full dark #191919 */
-  font-weight: 500;
-  flex: 1; min-width: 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.snippet-primary.mono {
-  font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
-  font-weight: 400;
-  color: var(--text-primary);      /* rgba(25,25,25,0.8) — still dark */
-  font-size: 12px;
-}
-.snippet-primary.masked {
-  letter-spacing: 2px;
-  color: var(--text-primary);
-}
-
 .snippet-item.copied { background: rgba(81, 207, 102, 0.1); }
-.snippet-item.copied .snippet-label,
-.snippet-item.copied .snippet-value { color: #2B8A3E; }
+.snippet-item.copied .snippet-value-only { color: #2B8A3E; }
 
 .snippet-actions {
   display: flex; align-items: center; gap: 2px;
@@ -856,51 +825,21 @@ body {
   background: var(--bg-primary);
   border: 1.5px solid var(--brand);
   margin: 4px 0;
-  box-shadow: 0 2px 8px rgba(71,114,250,0.12);
+  box-shadow: 0 2px 8px rgba(89,89,89,0.1);
 }
 .snippet-input {
   width: 100%; border: none; outline: none;
-  padding: 6px 4px; font-size: 12px;
+  padding: 6px 4px; font-size: 13px;
   color: var(--text-title); font-family: var(--font);
   background: transparent;
 }
 .snippet-input::placeholder { color: var(--text-placeholder); }
-.snippet-input + .snippet-input {
-  border-top: 1px solid var(--border);
-  font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
-}
 .snippet-form-toolbar {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: flex-end;
   padding: 4px 0 0; border-top: 1px solid var(--border);
   margin-top: 4px;
 }
-.snippet-form-options {
-  display: flex; align-items: center; gap: 8px;
-}
-.snippet-option-btn {
-  display: flex; align-items: center; gap: 3px;
-  padding: 3px 8px;
-  border: 1px solid var(--border);
-  background: transparent;
-  font-size: 11px; color: var(--text-secondary);
-  cursor: pointer; border-radius: var(--radius-pill);
-  font-family: var(--font); transition: all 0.12s;
-}
-.snippet-option-btn:hover { border-color: var(--brand); color: var(--brand); }
-.snippet-type-toggle {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 11px; color: var(--text-secondary);
-  cursor: pointer;
-}
-.snippet-type-toggle input { cursor: pointer; }
 .snippet-form-actions { display: flex; gap: 6px; }
-
-/* Name input: shown only when editing existing snippet with a name,
-   or when user clicks "命名" to add one. */
-.snippet-name-input {
-  border-bottom: 1px solid var(--border);
-  font-weight: 500;
-}
 
 /* Empty state for snippets */
 .snippets-empty {
@@ -973,7 +912,7 @@ body {
 .attribution::before {
   content: "";
   position: absolute; inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(71,114,250,0.05), transparent);
+  background: linear-gradient(90deg, transparent, rgba(89,89,89,0.04), transparent);
   transform: translateX(-100%);
   transition: transform 0.6s ease;
   pointer-events: none;
@@ -985,13 +924,13 @@ body {
   height: 26px;
   min-width: 26px;
   border-radius: 7px;
-  background: linear-gradient(135deg, #6B8FFF 0%, #4772FA 100%);
+  background: linear-gradient(135deg, #7A7A7A 0%, #595959 100%);
   color: #FFF;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(71, 114, 250, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 6px rgba(89, 89, 89, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .attribution:hover .attribution-mark {
@@ -1027,7 +966,7 @@ body {
   font-size: 11px;
   font-weight: 500;
   color: var(--text-secondary);
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-family: inherit;
   letter-spacing: -0.2px;
   transition: color 0.15s;
 }
@@ -1048,7 +987,7 @@ body {
 .attribution-version {
   font-size: 9px;
   font-weight: 500;
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-family: inherit;
   color: var(--text-secondary);
   padding: 2px 7px;
   background: var(--bg-hover);

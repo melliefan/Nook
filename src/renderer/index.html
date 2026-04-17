@@ -14,24 +14,16 @@
 
       <header class="header">
         <div class="header-left">
-          <div class="header-icon" data-icon="inbox" data-icon-size="20" data-icon-color="#4772FA"></div>
+          <div class="header-icon" data-icon="inbox" data-icon-size="20" data-icon-color="#595959"></div>
           <h1 class="header-title" id="headerTitle">收集箱</h1>
           <span class="header-count" id="headerCount">0</span>
         </div>
         <div class="header-right">
-          <button class="icon-btn" id="btnSearch" title="搜索 ⌘F"><span data-icon="search" data-icon-size="18"></span></button>
           <button class="icon-btn" id="btnSort" title="排序"><span data-icon="sort" data-icon-size="18"></span></button>
           <button class="icon-btn" id="btnSettings" title="设置"><span data-icon="settings" data-icon-size="18"></span></button>
           <button class="icon-btn" id="btnClose" title="关闭"><span data-icon="close" data-icon-size="18"></span></button>
         </div>
       </header>
-
-      <!-- 搜索栏 -->
-      <div class="search-bar hidden" id="searchBar">
-        <span data-icon="search" data-icon-size="15"></span>
-        <input type="text" id="searchInput" class="search-input" placeholder="搜索任务..." autocomplete="off" spellcheck="false">
-        <button class="search-clear" id="searchClear"><span data-icon="close" data-icon-size="14"></span></button>
-      </div>
 
       <!-- 标签筛选条 -->
       <div class="tag-filter-bar hidden" id="tagFilterBar">
@@ -66,7 +58,7 @@
       <div class="add-task-area" id="addTaskArea">
         <div class="add-task-row" id="addTaskRow">
           <button class="add-task-btn" id="addTaskBtn">
-            <span data-icon="add-circle" data-icon-size="18" data-icon-color="#4772FA"></span>
+            <span data-icon="add-circle" data-icon-size="18" data-icon-color="#595959"></span>
             <span>添加任务</span>
           </button>
         </div>
@@ -89,7 +81,7 @@
           <!-- 日期快捷选择 -->
           <div class="date-picker hidden" id="addDatePicker">
             <div class="date-option" data-date="today">
-              <span data-icon="clipboard" data-icon-size="15" data-icon-color="#4772FA"></span><span>今天</span>
+              <span data-icon="clipboard" data-icon-size="15" data-icon-color="#595959"></span><span>今天</span>
             </div>
             <div class="date-option" data-date="tomorrow">
               <span data-icon="calendar" data-icon-size="15" data-icon-color="#FF9A14"></span><span>明天</span>
@@ -158,17 +150,8 @@
         <div class="snippets-body" id="snippetsBody">
           <div class="snippets-list" id="snippetsList"></div>
           <div class="snippet-add-form hidden" id="snippetAddForm">
-            <!-- Name input appears only when editing an existing snippet that has a name,
-                 or when user explicitly adds a name via the "命名" button below. -->
-            <input type="text" id="snippetLabelInput" class="snippet-input snippet-name-input hidden" placeholder="名称（如：SSH 服务器）" autocomplete="off" spellcheck="false">
             <input type="text" id="snippetValueInput" class="snippet-input" placeholder="粘贴或输入内容，回车保存" autocomplete="off" spellcheck="false">
             <div class="snippet-form-toolbar">
-              <div class="snippet-form-options">
-                <button class="snippet-option-btn" id="btnSnippetName" title="给它取个名字">
-                  <span data-icon="pen" data-icon-size="12"></span>
-                  <span>命名</span>
-                </button>
-              </div>
               <div class="snippet-form-actions">
                 <button class="toolbar-action-btn" id="btnCancelSnippet">取消</button>
                 <button class="toolbar-action-btn primary" id="btnConfirmSnippet">保存</button>
@@ -253,7 +236,7 @@
           </div>
           <div class="subtask-list" id="subtaskList"></div>
           <div class="subtask-add-row">
-            <span data-icon="add-circle" data-icon-size="15" data-icon-color="#4772FA"></span>
+            <span data-icon="add-circle" data-icon-size="15" data-icon-color="#595959"></span>
             <input type="text" id="subtaskInput" class="subtask-input" placeholder="添加子任务" autocomplete="off" spellcheck="false">
           </div>
         </div>

@@ -7,12 +7,8 @@
 const panel = document.getElementById('panel');
 const listView = document.getElementById('listView');
 const headerCount = document.getElementById('headerCount');
-const btnSearch = document.getElementById('btnSearch');
 const btnSort = document.getElementById('btnSort');
 const btnClose = document.getElementById('btnClose');
-const searchBar = document.getElementById('searchBar');
-const searchInput = document.getElementById('searchInput');
-const searchClear = document.getElementById('searchClear');
 const tagFilterBar = document.getElementById('tagFilterBar');
 const tagFilterScroll = document.getElementById('tagFilterScroll');
 const sortMenu = document.getElementById('sortMenu');
@@ -70,7 +66,6 @@ const colorPickerGrid = document.getElementById('colorPickerGrid');
 let tasks = [];
 let allTags = {}; // { tagName: { color: '#xxx' | null } }
 let currentSort = 'custom';
-let searchQuery = '';
 let filterTag = null;
 let completedCollapsed = false;
 let contextTaskId = null;
@@ -80,28 +75,28 @@ let addDueDate = null;
 let addTags = [];
 let colorPickerTarget = null; // { tagName, origin: 'detail' | 'filter' }
 
-// ======= Tag Color Palette (参考滴答清单) =======
+// ======= Tag 调色板：饱和度比马卡龙稍高的糖果色（mid-sat ~60%, mid-light ~68%） =======
 const TAG_COLORS = [
-  '#4772FA', // 蓝 (brand)
-  '#14AAF5', // 天蓝
-  '#158FAD', // 青
-  '#6ACCBC', // 薄荷
-  '#299438', // 绿
-  '#7ECC49', // 草绿
-  '#AFBF2E', // 橄榄
-  '#FAD000', // 黄
-  '#FF9933', // 橙
-  '#EB4D3D', // 红
-  '#DB4035', // 深红
-  '#B8255F', // 莓红
-  '#E05194', // 粉
-  '#AF38EB', // 紫
-  '#884DFF', // 葡萄
-  '#96C3EB', // 浅蓝
-  '#EB96EB', // 淡紫
-  '#FF8D85', // 鲑鱼
-  '#CCAC93', // 灰棕
-  '#808080', // 灰
+  '#E8706E', // 1 红
+  '#E88B64', // 2 珊瑚
+  '#E8A364', // 3 橙
+  '#E3B54C', // 4 蜂蜜
+  '#DDC04E', // 5 黄
+  '#B6C85A', // 6 青柠
+  '#80C372', // 7 绿
+  '#64C3A3', // 8 薄荷
+  '#5CB5B5', // 9 青
+  '#5DA8D6', // 10 天蓝
+  '#6E8FD6', // 11 蓝
+  '#8076D4', // 12 靛
+  '#9A6DD0', // 13 紫
+  '#B172C9', // 14 淡紫
+  '#C973B6', // 15 品红
+  '#D3709A', // 16 粉
+  '#E1738B', // 17 玫瑰
+  '#E8927F', // 18 鲑
+  '#BCA690', // 19 驼
+  '#9A9A9A', // 20 灰
 ];
 
 const PRIORITY_CONFIG = {
@@ -202,13 +197,7 @@ function sortTasks(list) {
 }
 
 function filterTasks(list) {
-  let r = list;
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    r = r.filter(t => t.title.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q)) || t.tags.some(tg => tg.toLowerCase().includes(q)));
-  }
-  if (filterTag) r = r.filter(t => t.tags.includes(filterTag));
-  return r;
+  return filterTag ? list.filter(t => t.tags.includes(filterTag)) : list;
 }
 
 // ======= Render List =======
@@ -346,7 +335,7 @@ function closeAddTaskInput() { addTaskInputArea.classList.add('hidden'); addTask
 function updateAddFormUI() {
   if (addPriority !== 'none') { btnAddPriority.style.color = PRIORITY_CONFIG[addPriority].color; btnAddPriority.classList.add('active'); }
   else { btnAddPriority.style.color = ''; btnAddPriority.classList.remove('active'); }
-  if (addDueDate) { btnAddDate.classList.add('active'); btnAddDate.style.color = isOverdue(addDueDate) ? '#EB4D3D' : '#4772FA'; }
+  if (addDueDate) { btnAddDate.classList.add('active'); btnAddDate.style.color = isOverdue(addDueDate) ? '#EB4D3D' : '#595959'; }
   else { btnAddDate.classList.remove('active'); btnAddDate.style.color = ''; }
   if (addTags.length > 0) {
     addTaskTags.classList.remove('hidden');
@@ -363,10 +352,10 @@ function renderTagPickerList(input) {
   const filtered = q ? used.filter(t => t.toLowerCase().includes(q)) : used;
   let html = '';
   if (q && !used.includes(q) && !addTags.includes(q)) {
-    html += `<div class="tag-picker-item" data-tag="${escapeHtml(q)}"><span class="tag-color-dot" style="background:#4772FA"></span><span>创建 "${escapeHtml(q)}"</span></div>`;
+    html += `<div class="tag-picker-item" data-tag="${escapeHtml(q)}"><span class="tag-color-dot" style="background:#595959"></span><span>创建 "${escapeHtml(q)}"</span></div>`;
   }
   for (const tag of filtered) {
-    const c = getTagColor(tag) || '#4772FA';
+    const c = getTagColor(tag) || '#595959';
     const sel = addTags.includes(tag);
     html += `<div class="tag-picker-item ${sel ? 'selected' : ''}" data-tag="${escapeHtml(tag)}"><span class="tag-color-dot" style="background:${c}"></span><span>#${escapeHtml(tag)}</span></div>`;
   }
@@ -548,23 +537,6 @@ tagPickerInput.addEventListener('input', () => renderTagPickerList(tagPickerInpu
 tagPickerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const v = tagPickerInput.value.trim(); if (v && !addTags.includes(v)) { addTags.push(v); updateAddFormUI(); tagPickerInput.value = ''; renderTagPickerList(''); } } if (e.key === 'Escape') closeAllPickers(); });
 tagPickerList.addEventListener('click', (e) => { const item = e.target.closest('.tag-picker-item'); if (!item) return; const tag = item.dataset.tag; if (addTags.includes(tag)) addTags = addTags.filter(t => t !== tag); else addTags.push(tag); updateAddFormUI(); renderTagPickerList(tagPickerInput.value); });
 
-btnSearch.addEventListener('click', () => { searchBar.classList.toggle('hidden'); if (!searchBar.classList.contains('hidden')) searchInput.focus(); else { searchInput.value = ''; searchQuery = ''; render(); } });
-searchInput.addEventListener('input', () => { searchQuery = searchInput.value; render(); });
-searchClear.addEventListener('click', () => {
-  if (searchInput.value) {
-    // Has text → clear input, keep focus
-    searchInput.value = '';
-    searchQuery = '';
-    render();
-    searchInput.focus();
-  } else {
-    // Already empty → close the search bar
-    searchBar.classList.add('hidden');
-    searchQuery = '';
-    render();
-  }
-});
-
 btnSort.addEventListener('click', (e) => { e.stopPropagation(); sortMenu.classList.toggle('hidden'); });
 sortMenu.addEventListener('click', (e) => { const o = e.target.closest('.sort-option'); if (!o) return; currentSort = o.dataset.sort; sortMenu.querySelectorAll('.sort-option').forEach(el => el.classList.toggle('active', el.dataset.sort === currentSort)); sortMenu.classList.add('hidden'); render(); });
 
@@ -703,7 +675,6 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { hideContextMenu(); hideColorPicker(); if (detailView.classList.contains('slide-in')) navigateToList(); }
-  if ((e.metaKey || e.ctrlKey) && e.key === 'f') { e.preventDefault(); searchBar.classList.remove('hidden'); searchInput.focus(); }
   if ((e.metaKey || e.ctrlKey) && e.key === 'n') { e.preventDefault(); if (detailView.classList.contains('slide-in')) navigateToList(); openAddTaskInput(); }
 });
 
@@ -753,11 +724,9 @@ const snippetsList = document.getElementById('snippetsList');
 const snippetsCount = document.getElementById('snippetsCount');
 const btnAddSnippet = document.getElementById('btnAddSnippet');
 const snippetAddForm = document.getElementById('snippetAddForm');
-const snippetLabelInput = document.getElementById('snippetLabelInput');
 const snippetValueInput = document.getElementById('snippetValueInput');
 const btnCancelSnippet = document.getElementById('btnCancelSnippet');
 const btnConfirmSnippet = document.getElementById('btnConfirmSnippet');
-const btnSnippetName = document.getElementById('btnSnippetName');
 const toast = document.getElementById('toast');
 
 let snippets = [];
@@ -770,25 +739,11 @@ function renderSnippets() {
     return;
   }
   snippetsList.innerHTML = snippets.map((s, idx) => {
-    const hasLabel = !!(s.label && s.label.trim());
     const rowNumber = idx + 1;
-
-    // Display rule:
-    //  - Has label → show label (name takes priority).
-    //  - No label → show value (mono font).
-    let displayText;
-    let displayClass = 'snippet-primary';
-    if (hasLabel) {
-      displayText = s.label;
-    } else {
-      displayText = s.value;
-      displayClass += ' mono';
-    }
-
     return `
       <div class="snippet-item" data-id="${s.id}" data-snip-action="copy">
         <span class="snippet-index">${rowNumber}</span>
-        <span class="${displayClass}">${escapeHtml(displayText || '未命名')}</span>
+        <span class="snippet-value-only">${escapeHtml(s.value || '(空)')}</span>
         <div class="snippet-actions">
           <button class="snippet-btn" data-snip-action="edit" data-id="${s.id}" title="编辑">
             ${Icons.icon('pen', 13)}
@@ -808,20 +763,8 @@ async function loadSnippets() {
 
 function openSnippetForm(snippet) {
   editingSnippetId = snippet ? snippet.id : null;
-  const hasLabel = !!(snippet && snippet.label && snippet.label.trim());
-  snippetLabelInput.value = snippet ? (snippet.label || '') : '';
   snippetValueInput.value = snippet ? snippet.value : '';
   snippetValueInput.type = 'text';
-
-  // Show the name input only if we're editing AND the snippet already has a name.
-  if (hasLabel) {
-    snippetLabelInput.classList.remove('hidden');
-    btnSnippetName.classList.add('hidden');
-  } else {
-    snippetLabelInput.classList.add('hidden');
-    btnSnippetName.classList.remove('hidden');
-  }
-
   snippetAddForm.classList.remove('hidden');
   snippetsSection.classList.remove('collapsed');
   setTimeout(() => snippetValueInput.focus(), 50);
@@ -829,22 +772,17 @@ function openSnippetForm(snippet) {
 
 function closeSnippetForm() {
   snippetAddForm.classList.add('hidden');
-  snippetLabelInput.value = '';
   snippetValueInput.value = '';
-  snippetLabelInput.classList.add('hidden');
-  btnSnippetName.classList.remove('hidden');
   editingSnippetId = null;
 }
 
 async function saveSnippet() {
-  const label = snippetLabelInput.value.trim();
   const value = snippetValueInput.value;
-  // Value is required; label is optional
   if (!value) return;
   if (editingSnippetId) {
-    await window.api.updateSnippet(editingSnippetId, { label, value, type: 'text' });
+    await window.api.updateSnippet(editingSnippetId, { label: '', value, type: 'text' });
   } else {
-    await window.api.addSnippet(label, value, 'text');
+    await window.api.addSnippet('', value, 'text');
   }
   snippets = await window.api.getSnippets();
   renderSnippets();
@@ -897,19 +835,6 @@ btnAddSnippet.addEventListener('click', (e) => {
 btnCancelSnippet.addEventListener('click', closeSnippetForm);
 btnConfirmSnippet.addEventListener('click', saveSnippet);
 
-// "命名" button: reveal the name input inline and focus it.
-btnSnippetName.addEventListener('click', (e) => {
-  e.preventDefault();
-  snippetLabelInput.classList.remove('hidden');
-  btnSnippetName.classList.add('hidden');
-  snippetLabelInput.focus();
-});
-
-function handleSnippetFormKey(e) {
-  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveSnippet();
-  if (e.key === 'Escape') closeSnippetForm();
-}
-snippetLabelInput.addEventListener('keydown', handleSnippetFormKey);
 snippetValueInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') saveSnippet();
   if (e.key === 'Escape') closeSnippetForm();
