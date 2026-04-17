@@ -903,6 +903,46 @@ body {
 .corner-diagram.br::after { bottom: -1px; right: -1px; }
 .corner-btn.active .corner-diagram { opacity: 1; }
 
+/* Attribution stamp — bottom of the panel, clickable → GitHub.
+   Inline stack: "Nook · by · melliefan · v0.1.0" as a subtle signature. */
+.attribution {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 8px 14px 10px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-sidebar);
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text-placeholder);
+  transition: color 0.15s;
+}
+.attribution:hover { color: var(--brand); }
+.attribution-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text-secondary);
+}
+.attribution:hover .attribution-name { color: var(--brand); }
+.attribution-by {
+  font-size: 9px;
+  opacity: 0.65;
+}
+.attribution-author {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.attribution:hover .attribution-author { color: var(--brand); }
+.attribution-version {
+  font-size: 9px;
+  opacity: 0.55;
+  margin-left: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
 /* Toast */
 .toast {
   position: fixed; bottom: 80px; left: 50%;

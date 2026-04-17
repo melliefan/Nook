@@ -34,6 +34,8 @@ contextBridge.exposeInMainWorld('api', {
 
   // Meta
   getStorePath: () => ipcRenderer.invoke('store:getPath'),
+  getAppVersion: () => ipcRenderer.invoke('app:getVersion'),
+  openExternal: (url) => ipcRenderer.send('shell:openExternal', url),
 
   // Panel
   requestHide: () => ipcRenderer.send('panel:requestHide'),

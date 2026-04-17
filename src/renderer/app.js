@@ -729,6 +729,20 @@ window.api.onPanelHide(() => { panel.classList.remove('visible'); hideContextMen
   } catch (_) {}
 })();
 
+// Attribution stamp: show real version, clicking opens GitHub repo.
+const REPO_URL = 'https://github.com/melliefan/Nook';
+const attribution = document.getElementById('attribution');
+const attributionVersion = document.getElementById('attributionVersion');
+(async () => {
+  try {
+    const v = await window.api.getAppVersion();
+    if (v && attributionVersion) attributionVersion.textContent = `v${v}`;
+  } catch (_) {}
+})();
+attribution?.addEventListener('click', () => {
+  window.api.openExternal(REPO_URL);
+});
+
 // =============================================
 // Snippets (快捷粘贴)
 // =============================================

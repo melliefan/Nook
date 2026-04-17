@@ -1,4 +1,4 @@
-const { app, BrowserWindow, screen, ipcMain, globalShortcut } = require('electron');
+const { app, BrowserWindow, screen, ipcMain, globalShortcut, shell } = require('electron');
 const path = require('path');
 const Store = require('./store');
 const { computeLayout: computeLayoutPure, shouldHide, inTrigger } = require('./layout');
@@ -152,6 +152,14 @@ function setupIPC() {
 
   // Meta
   ipcMain.handle('store:getPath', () => store.getDataPath());
+  ipcMain.handle('app:getVersion', () => app.getVersion());
+
+  // External link opener (for the attribution badge → GitHub)
+  ipcMain.on('shell:openExternal', (_, url) => {
+    if (typeof url === 'string' && /^https?:\/\//.test(url)) {
+      shell.openExternal(url);
+    }
+  });
 
   // Panel
   ipcMain.on('panel:requestHide', () => hidePanel());
