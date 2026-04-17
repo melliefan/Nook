@@ -741,8 +741,8 @@ body {
    Snippets (快捷粘贴)
    ============================================= */
 .snippets-section {
-  border-top: 1px solid var(--border);
-  background: var(--bg-sidebar);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background: #F2F4F7;          /* darker than panel white — visually distinct band */
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -750,27 +750,39 @@ body {
   transition: max-height 0.25s ease;
 }
 .snippets-section.collapsed {
-  max-height: 36px;
+  max-height: 40px;
 }
 .snippets-header {
   display: flex; align-items: center; gap: 8px;
-  padding: 9px 14px; cursor: pointer;
+  padding: 10px 14px; cursor: pointer;
   user-select: none;
-  height: 36px; flex-shrink: 0;
-  color: var(--icon);
+  height: 40px; flex-shrink: 0;
+  color: var(--text-title);     /* explicit dark text color */
 }
-.snippets-header:hover { background: var(--bg-hover); }
-.snippets-arrow { transition: transform 0.2s; flex-shrink: 0; color: var(--icon-light); }
+.snippets-header:hover { background: rgba(0, 0, 0, 0.04); }
+.snippets-arrow { transition: transform 0.2s; flex-shrink: 0; color: var(--text-secondary); }
 .snippets-section:not(.collapsed) .snippets-arrow { transform: rotate(90deg); }
-.snippets-title { font-size: 13px; font-weight: 500; flex: 1; }
-.snippets-count { font-size: 11px; color: var(--text-placeholder); }
+.snippets-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-title);     /* #191919 — fully dark */
+  flex: 1;
+  letter-spacing: 0.2px;
+}
+.snippets-count {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+}
 .snippets-add-btn {
-  width: 22px; height: 22px; border: none; background: transparent;
-  color: var(--icon-light); border-radius: var(--radius-sm);
+  width: 24px; height: 24px; border: none; background: transparent;
+  color: var(--text-secondary); border-radius: var(--radius-sm);
   cursor: pointer; display: flex; align-items: center;
   justify-content: center; transition: all 0.12s;
 }
-.snippets-add-btn:hover { background: var(--bg-hover); color: var(--brand); }
+.snippets-add-btn:hover { background: rgba(0, 0, 0, 0.06); color: var(--brand); }
 
 .snippets-body {
   flex: 1; overflow-y: auto; padding: 2px 8px 8px;
@@ -779,12 +791,16 @@ body {
 .snippets-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
 
 .snippet-item {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 10px;
   padding: 7px 10px; border-radius: var(--radius-sm);
   cursor: pointer; transition: background 0.12s;
   position: relative;
+  color: var(--text-title);   /* explicit dark text */
+  background: #FFFFFF;         /* white row on the gray section for contrast */
+  margin-bottom: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
-.snippet-item:hover { background: var(--bg-hover); }
+.snippet-item:hover { background: #F0F4FF; }  /* subtle brand-tinted hover */
 .snippet-item:hover .snippet-actions { opacity: 1; }
 /* Row number prefix — always visible so user can say "粘贴第 2 条" naturally. */
 .snippet-index {
