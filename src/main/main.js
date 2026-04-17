@@ -130,7 +130,7 @@ function startMousePolling() {
   mousePoller = setInterval(() => {
     const point = screen.getCursorScreenPoint();
     const corner = getSetting('cornerTrigger', 'top-left');
-    const { bounds, triggerMin, triggerMax } = computeLayout(corner);
+    const { bounds, triggerMin, triggerMax, side } = computeLayout(corner);
 
     if (!isPanelVisible) {
       if (
@@ -140,11 +140,14 @@ function startMousePolling() {
         showPanel();
       }
     } else {
-      // Hide when mouse leaves the panel's column.
-      const panelLeft = bounds.x;
-      const panelRight = bounds.x + bounds.width;
-      if (point.x < panelLeft - 20 || point.x > panelRight + 20) {
-        hidePanel();
+      // Hide ONLY when mouse moves to the far side of the panel, away from the trigger.
+      // This avoids flicker near the hot corner where trigger-zone and hide-zone could overlap.
+      if (side === 'left') {
+        // Panel on left: hide when mouse moves past its right edge.
+        if (point.x > bounds.x + bounds.width + 20) hidePanel();
+      } else {
+        // Panel on right: hide when mouse moves past its left edge (into the rest of the screen).
+        if (point.x < bounds.x - 20) hidePanel();
       }
     }
   }, POLL_INTERVAL);
