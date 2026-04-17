@@ -152,18 +152,16 @@ body {
 .tag-filter-item {
   display: inline-flex; align-items: center; gap: 0;
   padding: 3px 10px; border-radius: var(--radius-pill);
-  font-size: 11px; cursor: pointer; transition: background 0.12s, color 0.12s;
+  font-size: 11px; cursor: pointer; transition: background 0.12s;
   border: none; white-space: nowrap; flex-shrink: 0;
   background: var(--tag-bg, var(--brand-bg));
-  color: var(--tag-color, var(--brand));
+  color: #333333;                  /* dark gray text — readable on any tag color */
+  font-weight: 500;
 }
 .tag-filter-item:hover { filter: brightness(0.95); }
-.tag-filter-item.active {
-  background: var(--tag-active-bg, var(--brand));
-  color: #FFF;
-}
 .tag-filter-all {
   background: var(--bg-hover); color: var(--text-secondary);
+  font-weight: 500;
 }
 .tag-filter-all.active {
   background: var(--text-title); color: #FFF;
@@ -322,9 +320,9 @@ body {
   padding: 2px 8px; border-radius: var(--radius-pill);
   font-size: 11px; white-space: nowrap; max-width: 140px;
   overflow: hidden; text-overflow: ellipsis; cursor: default;
-  /* default color applied via inline style or fallback */
   background: var(--tag-bg, var(--brand-bg));
-  color: var(--tag-color, var(--brand));
+  color: #333333;                  /* 统一深灰文字 */
+  font-weight: 500;
 }
 .tag-chip .tag-color-dot {
   width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
@@ -439,7 +437,8 @@ body {
   font-size: 10px; padding: 1px 6px; border-radius: var(--radius-pill);
   white-space: nowrap; display: inline-flex; align-items: center;
   background: var(--tag-bg, var(--brand-bg));
-  color: var(--tag-color, var(--brand));
+  color: #333333;                  /* 统一深灰文字 */
+  font-weight: 500;
 }
 .task-tag-more {
   background: var(--bg-hover); color: var(--text-secondary);

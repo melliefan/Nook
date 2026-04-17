@@ -168,15 +168,17 @@ function getTagColor(tagName) {
   return (info && info.color) || null;
 }
 
+// Tag text is ALWAYS dark gray (#333). Background uses a 30% alpha tint of the tag color
+// for consistent readability across all 20 neon colors (yellow / cyan / lime 等亮色不会看不清).
 function tagColorStyle(tagName) {
   const c = getTagColor(tagName);
   if (!c) return '';
-  return `style="--tag-color: ${c}; --tag-bg: ${c}18"`;
+  return `style="--tag-bg: ${c}40"`;
 }
 
 function tagChipHtml(tagName, removeAttr) {
   const c = getTagColor(tagName);
-  const colorStyle = c ? `style="--tag-color:${c};--tag-bg:${c}18"` : '';
+  const colorStyle = c ? `style="--tag-bg:${c}40"` : '';
   const removeBtn = removeAttr
     ? `<button class="tag-remove" ${removeAttr}="${escapeHtml(tagName)}">&times;</button>`
     : '';
@@ -215,7 +217,7 @@ function renderTaskItem(task) {
   const extraTagCount = (task.tags || []).length - visibleTags.length;
   for (const tag of visibleTags) {
     const c = getTagColor(tag);
-    const cs = c ? `style="--tag-color:${c};--tag-bg:${c}18"` : '';
+    const cs = c ? `style="--tag-bg:${c}40"` : '';
     metaHtml += `<span class="task-tag" ${cs}>#${escapeHtml(tag)}</span>`;
   }
   if (extraTagCount > 0) {
@@ -259,9 +261,10 @@ function renderTagFilterBar() {
   for (const tag of used) {
     const c = getTagColor(tag);
     const isActive = filterTag === tag;
-    // Active = full color bg + white text. Inactive = light bg (18% alpha) + colored text.
+    // All tag text is dark gray regardless of bg color.
+    // Background: light tint (~25% alpha) when inactive, stronger tint (~70% alpha) when active.
     const style = c
-      ? `style="--tag-active-bg:${c};background:${isActive ? c : c + '18'};color:${isActive ? '#FFF' : c}"`
+      ? `style="background:${c}${isActive ? 'AA' : '40'}"`
       : '';
     html += `<div class="tag-filter-item ${isActive ? 'active' : ''}" data-tag="${escapeHtml(tag)}" ${style}>#${escapeHtml(tag)}</div>`;
   }
