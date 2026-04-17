@@ -9,6 +9,8 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
+    "test": "node --test 'test/*.test.js'",
+    "test:watch": "node --test --watch 'test/*.test.js'",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:mac": "electron-builder --mac",

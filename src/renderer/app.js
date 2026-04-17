@@ -550,7 +550,20 @@ tagPickerList.addEventListener('click', (e) => { const item = e.target.closest('
 
 btnSearch.addEventListener('click', () => { searchBar.classList.toggle('hidden'); if (!searchBar.classList.contains('hidden')) searchInput.focus(); else { searchInput.value = ''; searchQuery = ''; render(); } });
 searchInput.addEventListener('input', () => { searchQuery = searchInput.value; render(); });
-searchClear.addEventListener('click', () => { searchInput.value = ''; searchQuery = ''; render(); searchInput.focus(); });
+searchClear.addEventListener('click', () => {
+  if (searchInput.value) {
+    // Has text → clear input, keep focus
+    searchInput.value = '';
+    searchQuery = '';
+    render();
+    searchInput.focus();
+  } else {
+    // Already empty → close the search bar
+    searchBar.classList.add('hidden');
+    searchQuery = '';
+    render();
+  }
+});
 
 btnSort.addEventListener('click', (e) => { e.stopPropagation(); sortMenu.classList.toggle('hidden'); });
 sortMenu.addEventListener('click', (e) => { const o = e.target.closest('.sort-option'); if (!o) return; currentSort = o.dataset.sort; sortMenu.querySelectorAll('.sort-option').forEach(el => el.classList.toggle('active', el.dataset.sort === currentSort)); sortMenu.classList.add('hidden'); render(); });
