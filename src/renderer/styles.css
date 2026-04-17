@@ -373,7 +373,11 @@ body {
 
 /* ======= Task List Container ======= */
 .task-list-container {
-  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 2px 0;
+  flex: 0 1 auto;           /* size to content, can shrink if viewport too small */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px 0;
+  min-height: 80px;         /* empty state stays visible */
 }
 .task-list-container::-webkit-scrollbar { width: 5px; }
 .task-list-container::-webkit-scrollbar-track { background: transparent; }
@@ -748,6 +752,7 @@ body {
   flex-direction: column;
   max-height: 280px;
   transition: max-height 0.25s ease;
+  /* snippets sits right below the task list; attribution below handles "push-to-bottom" via margin */
 }
 .snippets-section.collapsed {
   max-height: 40px;
@@ -950,7 +955,7 @@ body {
 .corner-btn.active .corner-diagram { opacity: 1; }
 
 /* Attribution stamp — 作品签名 at the panel's base. Clickable → GitHub.
-   Layout: [logo mark] [name / tagline] [version pill + ↗ arrow] */
+   Anchored to the very bottom of the panel. */
 .attribution {
   display: flex;
   align-items: center;
@@ -959,6 +964,7 @@ body {
   border-top: 1px solid var(--border);
   background: var(--bg-sidebar);
   flex-shrink: 0;
+  margin-top: auto;            /* push to panel's bottom even when content is short */
   cursor: pointer;
   user-select: none;
   transition: background 0.2s;
