@@ -929,26 +929,13 @@ loadSnippets();
 // =============================================
 const btnSettings = document.getElementById('btnSettings');
 const settingsPopover = document.getElementById('settingsPopover');
-const footerHint = document.getElementById('footerHint');
-
-const CORNER_LABELS = {
-  'top-left': '左上角',
-  'top-right': '右上角',
-  'bottom-left': '左下角',
-  'bottom-right': '右下角',
-};
 
 let currentCorner = 'top-left';
 
 function updateCornerUI() {
-  // Highlight active button
   document.querySelectorAll('.corner-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.corner === currentCorner);
   });
-  // Update footer hint
-  if (footerHint) {
-    footerHint.textContent = `鼠标移到屏幕${CORNER_LABELS[currentCorner]}唤起 · 离开自动收起`;
-  }
 }
 
 async function loadSettings() {
