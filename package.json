@@ -1,0 +1,77 @@
+{
+  "name": "nook",
+  "productName": "Nook",
+  "version": "0.1.0",
+  "description": "Nook · 角落 — 鼠标滑到屏幕左上角即唤出的极简待办面板。A hot-corner todo panel, inspired by TickTick light mode.",
+  "main": "src/main/main.js",
+  "author": "melliefan",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:mac-universal": "electron-builder --mac --universal",
+    "dist:mac-arm": "electron-builder --mac --arm64",
+    "dist:mac-x64": "electron-builder --mac --x64"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.melliefan.nook",
+    "productName": "Nook",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "!**/*.map",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
+    ],
+    "extraResources": [
+      {
+        "from": "src/renderer/icons",
+        "to": "icons"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null
+    },
+    "dmg": {
+      "title": "Nook ${version}",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 400
+      }
+    }
+  }
+}

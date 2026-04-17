@@ -1,0 +1,47 @@
+node_modules/
+dist/
+out/
+*.log
+
+# Keep build/ for icon assets — only ignore any temp files there
+build/*.iconset/
+build/*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Electron build artifacts
+*.dmg
+*.zip
+*.pkg
+*.exe
+*.deb
+*.rpm
+*.AppImage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# User data — IMPORTANT: never commit real tasks/passwords
+data/
+*.tasks.json
+
+# Dev notes (not public)
+record.md
+
+
+# Logs
+logs/
+npm-debug.log*
+yarn-debug.log*
