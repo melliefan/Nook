@@ -1,7 +1,7 @@
 {
   "name": "nook",
   "productName": "Nook",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Nook · 角落 — 鼠标滑到屏幕左上角即唤出的极简待办面板。A hot-corner todo panel, inspired by TickTick light mode.",
   "main": "src/main/main.js",
   "author": "melliefan",
