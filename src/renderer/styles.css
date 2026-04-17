@@ -745,14 +745,14 @@ body {
    Snippets (快捷粘贴)
    ============================================= */
 .snippets-section {
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  background: #F2F4F7;          /* darker than panel white — visually distinct band */
+  border-top: 1px solid rgba(0, 0, 0, 0.14);
+  background: #E8ECF2;              /* stronger gray for real visual contrast */
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   max-height: 280px;
   transition: max-height 0.25s ease;
-  /* snippets sits right below the task list; attribution below handles "push-to-bottom" via margin */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);   /* subtle inset = "drawer" feel */
 }
 .snippets-section.collapsed {
   max-height: 40px;
@@ -797,39 +797,57 @@ body {
 
 .snippet-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 7px 10px; border-radius: var(--radius-sm);
-  cursor: pointer; transition: background 0.12s;
+  padding: 9px 12px; border-radius: 8px;
+  cursor: pointer; transition: transform 0.1s, box-shadow 0.15s, background 0.12s;
   position: relative;
-  color: var(--text-title);   /* explicit dark text */
-  background: #FFFFFF;         /* white row on the gray section for contrast */
-  margin-bottom: 2px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  color: var(--text-title);                      /* #191919 dark text */
+  background: #FFFFFF;                            /* solid white card */
+  margin-bottom: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(15, 28, 71, 0.08);  /* real shadow — card floats */
 }
-.snippet-item:hover { background: #F0F4FF; }  /* subtle brand-tinted hover */
+.snippet-item:last-child { margin-bottom: 0; }
+.snippet-item:hover {
+  background: #FFFFFF;
+  border-color: var(--brand);
+  box-shadow: 0 2px 8px rgba(71, 114, 250, 0.18);
+  transform: translateY(-1px);
+}
+.snippet-item.copied {
+  background: rgba(81, 207, 102, 0.12);
+  border-color: rgba(81, 207, 102, 0.5);
+}
 .snippet-item:hover .snippet-actions { opacity: 1; }
-/* Row number prefix — always visible so user can say "粘贴第 2 条" naturally. */
+/* Row number prefix — always visible in a circular badge so user can reference it. */
 .snippet-index {
-  font-size: 11px;
-  font-weight: 500;
+  display: flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px;
+  font-size: 11px; font-weight: 600;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  color: var(--text-placeholder);
-  min-width: 14px;
-  text-align: right;
+  color: var(--brand);
+  background: var(--brand-bg);
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
 /* Single-line display: if snippet has a name, show name; otherwise show value (mono / masked). */
 .snippet-primary {
-  font-size: 12px; color: var(--text-primary);
-  font-weight: 500; flex: 1; min-width: 0;
+  font-size: 13px;
+  color: var(--text-title);        /* full dark #191919 */
+  font-weight: 500;
+  flex: 1; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .snippet-primary.mono {
   font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
-  font-weight: 400; color: var(--text-secondary);
-  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-primary);      /* rgba(25,25,25,0.8) — still dark */
+  font-size: 12px;
 }
-.snippet-primary.masked { letter-spacing: 2px; color: var(--text-secondary); }
+.snippet-primary.masked {
+  letter-spacing: 2px;
+  color: var(--text-primary);
+}
 
 .snippet-item.copied { background: rgba(81, 207, 102, 0.1); }
 .snippet-item.copied .snippet-label,
