@@ -1,58 +1,25 @@
 const { app, BrowserWindow, screen, ipcMain, globalShortcut } = require('electron');
 const path = require('path');
 const Store = require('./store');
+const { computeLayout: computeLayoutPure, shouldHide, inTrigger } = require('./layout');
 
 let panelWindow = null;
 let store = null;
 let mousePoller = null;
 let isPanelVisible = false;
+// When repositioning the panel (corner switch), give the user a window of
+// time before we consider hiding the panel based on cursor position, so the
+// panel doesn't snap away before they can react.
+let hideSuppressUntilMs = 0;
+const REPOSITION_GRACE_MS = 2500;
 
 const TRIGGER_SIZE = 8;
 const PANEL_WIDTH = 380;
 const POLL_INTERVAL = 100;
 
-/**
- * Compute panel bounds + trigger zone given current display + user's chosen corner.
- *
- * corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
- *
- * Returns:
- *   - bounds: { x, y, width, height } — where to place the (full-height) window
- *   - triggerMin / triggerMax: rectangle in screen coords that summons the panel
- *   - side: 'left' | 'right' — which edge the panel slides in from (for CSS)
- */
+/** Wrapper around the pure layout function, injecting current display + panel width. */
 function computeLayout(corner) {
-  const d = screen.getPrimaryDisplay();
-  const work = d.workArea;               // excludes menu bar / Dock
-  const full = d.bounds;                 // entire screen
-
-  const side = corner.endsWith('-right') ? 'right' : 'left';
-  const vertical = corner.startsWith('top') ? 'top' : 'bottom';
-
-  const bounds = {
-    x: side === 'left' ? work.x : work.x + work.width - PANEL_WIDTH,
-    y: work.y,
-    width: PANEL_WIDTH,
-    height: work.height,
-  };
-
-  // Trigger zone: the screen corner, extended a bit into workArea so Dock / menu bar don't block it.
-  let triggerMin, triggerMax;
-  if (corner === 'top-left') {
-    triggerMin = { x: 0, y: 0 };
-    triggerMax = { x: work.x + TRIGGER_SIZE, y: work.y + TRIGGER_SIZE };
-  } else if (corner === 'top-right') {
-    triggerMin = { x: work.x + work.width - TRIGGER_SIZE, y: 0 };
-    triggerMax = { x: full.x + full.width, y: work.y + TRIGGER_SIZE };
-  } else if (corner === 'bottom-left') {
-    triggerMin = { x: 0, y: work.y + work.height - TRIGGER_SIZE };
-    triggerMax = { x: work.x + TRIGGER_SIZE, y: full.y + full.height };
-  } else { // bottom-right
-    triggerMin = { x: work.x + work.width - TRIGGER_SIZE, y: work.y + work.height - TRIGGER_SIZE };
-    triggerMax = { x: full.x + full.width, y: full.y + full.height };
-  }
-
-  return { bounds, triggerMin, triggerMax, side };
+  return computeLayoutPure(corner, screen.getPrimaryDisplay(), PANEL_WIDTH, TRIGGER_SIZE);
 }
 
 function getSetting(key, fallback) {
@@ -105,6 +72,9 @@ function repositionPanel() {
   const { bounds, side } = computeLayout(corner);
   panelWindow.setBounds(bounds);
   panelWindow.webContents.send('panel:side', side);
+  // Grace period — give the user time to move the mouse to the new corner
+  // instead of auto-hiding as soon as the cursor happens to be in the hide zone.
+  hideSuppressUntilMs = Date.now() + REPOSITION_GRACE_MS;
 }
 
 function showPanel() {
@@ -133,21 +103,12 @@ function startMousePolling() {
     const { bounds, triggerMin, triggerMax, side } = computeLayout(corner);
 
     if (!isPanelVisible) {
-      if (
-        point.x >= triggerMin.x && point.x <= triggerMax.x &&
-        point.y >= triggerMin.y && point.y <= triggerMax.y
-      ) {
+      if (inTrigger(point, triggerMin, triggerMax)) {
         showPanel();
       }
     } else {
-      // Hide ONLY when mouse moves to the far side of the panel, away from the trigger.
-      // This avoids flicker near the hot corner where trigger-zone and hide-zone could overlap.
-      if (side === 'left') {
-        // Panel on left: hide when mouse moves past its right edge.
-        if (point.x > bounds.x + bounds.width + 20) hidePanel();
-      } else {
-        // Panel on right: hide when mouse moves past its left edge (into the rest of the screen).
-        if (point.x < bounds.x - 20) hidePanel();
+      if (shouldHide(point, bounds, side, Date.now(), hideSuppressUntilMs)) {
+        hidePanel();
       }
     }
   }, POLL_INTERVAL);

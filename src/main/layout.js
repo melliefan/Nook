@@ -41,9 +41,20 @@ function computeLayout(corner, display, panelWidth = 380, triggerSize = 8) {
 
 /**
  * Should hide the panel given current mouse position?
- * Only checks the side AWAY from the trigger to prevent flicker loops.
+ *
+ * - Only checks the side AWAY from the trigger (prevents flicker-loop).
+ * - Respects a "hide suppression" grace period, e.g. right after the panel
+ *   has been repositioned due to a corner-switch, so the panel doesn't
+ *   vanish before the user has a chance to move to the new corner.
+ *
+ * @param {{x:number, y:number}} point
+ * @param {{x:number, y:number, width:number, height:number}} bounds
+ * @param {'left'|'right'} side
+ * @param {number} [nowMs] - current time (injectable for tests)
+ * @param {number} [suppressUntilMs=0] - if nowMs < this, never hide
  */
-function shouldHide(point, bounds, side) {
+function shouldHide(point, bounds, side, nowMs = Date.now(), suppressUntilMs = 0) {
+  if (nowMs < suppressUntilMs) return false;
   if (side === 'left') {
     return point.x > bounds.x + bounds.width + 20;
   } else {

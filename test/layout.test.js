@@ -92,6 +92,58 @@ describe('shouldHide: prevents flicker loop by only checking the far side', () =
   });
 });
 
+describe('shouldHide: suppression grace period after corner switch', () => {
+  test('within grace period, hide is suppressed even when mouse is in hide zone', () => {
+    // Scenario: user was at top-left, panel visible. They click "右上" in settings.
+    // Panel jumps to right side. Mouse is still around x=340 (old panel center).
+    // For right-side panel on Dock-left display, bounds.x = 1060 → hide zone is x < 1040.
+    // Mouse at x=340 → would hide immediately → bad UX.
+    const { bounds, side } = computeLayout('top-right', displayDockLeft, PANEL_W);
+    const now = 1_000_000;
+    const suppressUntil = now + 2500;
+
+    // Without suppression: would hide
+    assert.equal(shouldHide({ x: 340, y: 100 }, bounds, side, now, 0), true);
+    // With active suppression: does NOT hide
+    assert.equal(shouldHide({ x: 340, y: 100 }, bounds, side, now, suppressUntil), false);
+  });
+
+  test('after grace period expires, hide behaves normally', () => {
+    const { bounds, side } = computeLayout('top-right', displayDockLeft, PANEL_W);
+    const now = 1_000_000;
+    const suppressUntil = now - 1; // already expired
+    assert.equal(shouldHide({ x: 340, y: 100 }, bounds, side, now, suppressUntil), true);
+  });
+
+  test('suppression does not force-show when mouse is in panel area', () => {
+    // Even during suppression, a mouse already in the panel area isn't hidden anyway.
+    const { bounds, side } = computeLayout('top-right', displayDockLeft, PANEL_W);
+    const now = 1_000_000;
+    assert.equal(shouldHide({ x: bounds.x + 50, y: 100 }, bounds, side, now, now + 2500), false);
+  });
+
+  for (const [from, to] of [
+    ['top-left', 'top-right'],
+    ['top-right', 'top-left'],
+    ['bottom-left', 'bottom-right'],
+    ['bottom-right', 'bottom-left'],
+  ]) {
+    test(`switch ${from} → ${to}: panel stays put during grace window`, () => {
+      // Mouse assumed to be where the old panel's settings button was (approx top-right of old panel).
+      const { bounds: oldBounds } = computeLayout(from, displayDockLeft, PANEL_W);
+      const mouseX = oldBounds.x + 340;    // near the far-right edge of old panel
+      const mouseY = 40;                    // near header
+      const { bounds: newBounds, side } = computeLayout(to, displayDockLeft, PANEL_W);
+      const now = 1_000_000;
+      assert.equal(
+        shouldHide({ x: mouseX, y: mouseY }, newBounds, side, now, now + 2500),
+        false,
+        'hide should be suppressed during grace window',
+      );
+    });
+  }
+});
+
 describe('Invariant: trigger zone and hide zone do NOT overlap (no flicker loop possible)', () => {
   for (const corner of ['top-left', 'top-right', 'bottom-left', 'bottom-right']) {
     test(`${corner} on Dock-left display`, () => {
