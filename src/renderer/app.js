@@ -758,6 +758,7 @@ const snippetValueInput = document.getElementById('snippetValueInput');
 const snippetIsPassword = document.getElementById('snippetIsPassword');
 const btnCancelSnippet = document.getElementById('btnCancelSnippet');
 const btnConfirmSnippet = document.getElementById('btnConfirmSnippet');
+const btnSnippetName = document.getElementById('btnSnippetName');
 const toast = document.getElementById('toast');
 
 let snippets = [];
@@ -778,16 +779,32 @@ function renderSnippets() {
   }
   snippetsList.innerHTML = snippets.map(s => {
     const isRevealed = revealedSnippetIds.has(s.id);
-    const isMasked = s.type === 'password' && !isRevealed;
-    const displayValue = isMasked ? maskValue(s.value) : s.value;
-    const eyeIcon = s.type === 'password' ? `
+    const isPassword = s.type === 'password';
+    const hasLabel = !!(s.label && s.label.trim());
+
+    // Display rule:
+    //  - Has label → show label only (name takes priority, value is hidden).
+    //  - No label → show value (masked if password).
+    let displayText;
+    let displayClass = 'snippet-primary';
+    if (hasLabel) {
+      displayText = s.label;
+    } else if (isPassword && !isRevealed) {
+      displayText = maskValue(s.value);
+      displayClass += ' masked';
+    } else {
+      displayText = s.value;
+      displayClass += ' mono';
+    }
+
+    const eyeIcon = isPassword ? `
       <button class="snippet-btn" data-snip-action="reveal" data-id="${s.id}" title="${isRevealed ? '隐藏' : '显示'}">
         ${isRevealed ? Icons.icon('eye-closed', 13) : Icons.icon('eye', 13)}
       </button>` : '';
+
     return `
       <div class="snippet-item" data-id="${s.id}" data-snip-action="copy">
-        <span class="snippet-label">${escapeHtml(s.label || '未命名')}</span>
-        <span class="snippet-value ${isMasked ? 'masked' : ''}">${escapeHtml(displayValue)}</span>
+        <span class="${displayClass}">${escapeHtml(displayText || '未命名')}</span>
         <div class="snippet-actions">
           ${eyeIcon}
           <button class="snippet-btn" data-snip-action="edit" data-id="${s.id}" title="编辑">
@@ -808,14 +825,25 @@ async function loadSnippets() {
 
 function openSnippetForm(snippet) {
   editingSnippetId = snippet ? snippet.id : null;
-  snippetLabelInput.value = snippet ? snippet.label : '';
+  const hasLabel = !!(snippet && snippet.label && snippet.label.trim());
+  snippetLabelInput.value = snippet ? (snippet.label || '') : '';
   snippetValueInput.value = snippet ? snippet.value : '';
   snippetIsPassword.checked = snippet ? snippet.type === 'password' : false;
   snippetValueInput.type = snippetIsPassword.checked ? 'password' : 'text';
+
+  // Show the name input only if we're editing AND the snippet already has a name.
+  // Otherwise start with a single input (user can click "命名" to add one).
+  if (hasLabel) {
+    snippetLabelInput.classList.remove('hidden');
+    btnSnippetName.classList.add('hidden');
+  } else {
+    snippetLabelInput.classList.add('hidden');
+    btnSnippetName.classList.remove('hidden');
+  }
+
   snippetAddForm.classList.remove('hidden');
-  // Ensure panel is expanded
   snippetsSection.classList.remove('collapsed');
-  setTimeout(() => snippetLabelInput.focus(), 50);
+  setTimeout(() => snippetValueInput.focus(), 50);
 }
 
 function closeSnippetForm() {
@@ -823,6 +851,8 @@ function closeSnippetForm() {
   snippetLabelInput.value = '';
   snippetValueInput.value = '';
   snippetIsPassword.checked = false;
+  snippetLabelInput.classList.add('hidden');
+  btnSnippetName.classList.remove('hidden');
   editingSnippetId = null;
 }
 
@@ -889,6 +919,14 @@ btnConfirmSnippet.addEventListener('click', saveSnippet);
 
 snippetIsPassword.addEventListener('change', () => {
   snippetValueInput.type = snippetIsPassword.checked ? 'password' : 'text';
+});
+
+// "命名" button: reveal the name input inline and focus it.
+btnSnippetName.addEventListener('click', (e) => {
+  e.preventDefault();
+  snippetLabelInput.classList.remove('hidden');
+  btnSnippetName.classList.add('hidden');
+  snippetLabelInput.focus();
 });
 
 function handleSnippetFormKey(e) {

@@ -786,19 +786,18 @@ body {
 }
 .snippet-item:hover { background: var(--bg-hover); }
 .snippet-item:hover .snippet-actions { opacity: 1; }
-.snippet-label {
+/* Single-line display: if snippet has a name, show name; otherwise show value (mono / masked). */
+.snippet-primary {
   font-size: 12px; color: var(--text-primary);
-  font-weight: 500; min-width: 0; flex-shrink: 0;
-  max-width: 100px; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 500; flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.snippet-value {
-  font-size: 11px; color: var(--text-secondary);
-  flex: 1; min-width: 0; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap;
+.snippet-primary.mono {
   font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  font-weight: 400; color: var(--text-secondary);
+  font-size: 11px;
 }
-.snippet-value.masked { letter-spacing: 2px; }
+.snippet-primary.masked { letter-spacing: 2px; color: var(--text-secondary); }
 
 .snippet-item.copied { background: rgba(81, 207, 102, 0.1); }
 .snippet-item.copied .snippet-label,
@@ -842,6 +841,19 @@ body {
   padding: 4px 0 0; border-top: 1px solid var(--border);
   margin-top: 4px;
 }
+.snippet-form-options {
+  display: flex; align-items: center; gap: 8px;
+}
+.snippet-option-btn {
+  display: flex; align-items: center; gap: 3px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-size: 11px; color: var(--text-secondary);
+  cursor: pointer; border-radius: var(--radius-pill);
+  font-family: var(--font); transition: all 0.12s;
+}
+.snippet-option-btn:hover { border-color: var(--brand); color: var(--brand); }
 .snippet-type-toggle {
   display: flex; align-items: center; gap: 4px;
   font-size: 11px; color: var(--text-secondary);
@@ -849,6 +861,13 @@ body {
 }
 .snippet-type-toggle input { cursor: pointer; }
 .snippet-form-actions { display: flex; gap: 6px; }
+
+/* Name input: shown only when editing existing snippet with a name,
+   or when user clicks "命名" to add one. */
+.snippet-name-input {
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+}
 
 /* Empty state for snippets */
 .snippets-empty {
@@ -903,44 +922,117 @@ body {
 .corner-diagram.br::after { bottom: -1px; right: -1px; }
 .corner-btn.active .corner-diagram { opacity: 1; }
 
-/* Attribution stamp — bottom of the panel, clickable → GitHub.
-   Inline stack: "Nook · by · melliefan · v0.1.0" as a subtle signature. */
+/* Attribution stamp — 作品签名 at the panel's base. Clickable → GitHub.
+   Layout: [logo mark] [name / tagline] [version pill + ↗ arrow] */
 .attribution {
   display: flex;
-  align-items: baseline;
-  gap: 5px;
-  padding: 8px 14px 10px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 12px;
   border-top: 1px solid var(--border);
   background: var(--bg-sidebar);
   flex-shrink: 0;
   cursor: pointer;
   user-select: none;
-  color: var(--text-placeholder);
+  transition: background 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.attribution::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(71,114,250,0.05), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+.attribution:hover::before { transform: translateX(100%); }
+
+.attribution-mark {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #6B8FFF 0%, #4772FA 100%);
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(71, 114, 250, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.attribution:hover .attribution-mark {
+  transform: rotate(-8deg) scale(1.08);
+}
+
+.attribution-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.attribution-row1 {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--font);
+}
+.attribution-name {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--text-title);
   transition: color 0.15s;
 }
-.attribution:hover { color: var(--brand); }
-.attribution-name {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  color: var(--text-secondary);
-}
 .attribution:hover .attribution-name { color: var(--brand); }
-.attribution-by {
-  font-size: 9px;
-  opacity: 0.65;
+.attribution-dot {
+  color: var(--text-placeholder);
+  font-size: 10px;
+  opacity: 0.6;
 }
-.attribution-author {
+.attribution-handle {
   font-size: 11px;
   font-weight: 500;
   color: var(--text-secondary);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: -0.2px;
+  transition: color 0.15s;
 }
-.attribution:hover .attribution-author { color: var(--brand); }
+.attribution:hover .attribution-handle { color: var(--brand); }
+.attribution-row2 {
+  font-size: 9px;
+  color: var(--text-placeholder);
+  letter-spacing: 0.3px;
+  opacity: 0.8;
+}
+
+.attribution-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
 .attribution-version {
   font-size: 9px;
-  opacity: 0.55;
-  margin-left: auto;
+  font-weight: 500;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--text-secondary);
+  padding: 2px 7px;
+  background: var(--bg-hover);
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+}
+.attribution-arrow {
+  font-size: 13px;
+  color: var(--text-placeholder);
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s;
+}
+.attribution:hover .attribution-arrow {
+  color: var(--brand);
+  transform: translate(3px, -3px);
 }
 
 /* Toast */
