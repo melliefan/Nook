@@ -777,13 +777,14 @@ function renderSnippets() {
     snippetsList.innerHTML = `<div class="snippets-empty">点击 + 添加常用命令或密码</div>`;
     return;
   }
-  snippetsList.innerHTML = snippets.map(s => {
+  snippetsList.innerHTML = snippets.map((s, idx) => {
     const isRevealed = revealedSnippetIds.has(s.id);
     const isPassword = s.type === 'password';
     const hasLabel = !!(s.label && s.label.trim());
+    const rowNumber = idx + 1;  // 1-based serial number, always shown
 
-    // Display rule:
-    //  - Has label → show label only (name takes priority, value is hidden).
+    // Primary text:
+    //  - Has label → show label (name takes priority, value is hidden).
     //  - No label → show value (masked if password).
     let displayText;
     let displayClass = 'snippet-primary';
@@ -804,6 +805,7 @@ function renderSnippets() {
 
     return `
       <div class="snippet-item" data-id="${s.id}" data-snip-action="copy">
+        <span class="snippet-index">${rowNumber}</span>
         <span class="${displayClass}">${escapeHtml(displayText || '未命名')}</span>
         <div class="snippet-actions">
           ${eyeIcon}

@@ -786,6 +786,17 @@ body {
 }
 .snippet-item:hover { background: var(--bg-hover); }
 .snippet-item:hover .snippet-actions { opacity: 1; }
+/* Row number prefix — always visible so user can say "粘贴第 2 条" naturally. */
+.snippet-index {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--text-placeholder);
+  min-width: 14px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
 /* Single-line display: if snippet has a name, show name; otherwise show value (mono / masked). */
 .snippet-primary {
   font-size: 12px; color: var(--text-primary);
@@ -970,8 +981,7 @@ body {
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: baseline;
 }
 .attribution-row1 {
   display: flex;
