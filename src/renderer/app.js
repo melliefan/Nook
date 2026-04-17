@@ -755,7 +755,6 @@ const btnAddSnippet = document.getElementById('btnAddSnippet');
 const snippetAddForm = document.getElementById('snippetAddForm');
 const snippetLabelInput = document.getElementById('snippetLabelInput');
 const snippetValueInput = document.getElementById('snippetValueInput');
-const snippetIsPassword = document.getElementById('snippetIsPassword');
 const btnCancelSnippet = document.getElementById('btnCancelSnippet');
 const btnConfirmSnippet = document.getElementById('btnConfirmSnippet');
 const btnSnippetName = document.getElementById('btnSnippetName');
@@ -763,13 +762,6 @@ const toast = document.getElementById('toast');
 
 let snippets = [];
 let editingSnippetId = null;
-let revealedSnippetIds = new Set();
-
-function maskValue(v) {
-  if (!v) return '';
-  if (v.length <= 4) return '•'.repeat(v.length);
-  return '•'.repeat(Math.min(v.length, 10));
-}
 
 function renderSnippets() {
   snippetsCount.textContent = snippets.length > 0 ? snippets.length : '';
@@ -778,37 +770,26 @@ function renderSnippets() {
     return;
   }
   snippetsList.innerHTML = snippets.map((s, idx) => {
-    const isRevealed = revealedSnippetIds.has(s.id);
-    const isPassword = s.type === 'password';
     const hasLabel = !!(s.label && s.label.trim());
-    const rowNumber = idx + 1;  // 1-based serial number, always shown
+    const rowNumber = idx + 1;
 
-    // Primary text:
-    //  - Has label → show label (name takes priority, value is hidden).
-    //  - No label → show value (masked if password).
+    // Display rule:
+    //  - Has label → show label (name takes priority).
+    //  - No label → show value (mono font).
     let displayText;
     let displayClass = 'snippet-primary';
     if (hasLabel) {
       displayText = s.label;
-    } else if (isPassword && !isRevealed) {
-      displayText = maskValue(s.value);
-      displayClass += ' masked';
     } else {
       displayText = s.value;
       displayClass += ' mono';
     }
-
-    const eyeIcon = isPassword ? `
-      <button class="snippet-btn" data-snip-action="reveal" data-id="${s.id}" title="${isRevealed ? '隐藏' : '显示'}">
-        ${isRevealed ? Icons.icon('eye-closed', 13) : Icons.icon('eye', 13)}
-      </button>` : '';
 
     return `
       <div class="snippet-item" data-id="${s.id}" data-snip-action="copy">
         <span class="snippet-index">${rowNumber}</span>
         <span class="${displayClass}">${escapeHtml(displayText || '未命名')}</span>
         <div class="snippet-actions">
-          ${eyeIcon}
           <button class="snippet-btn" data-snip-action="edit" data-id="${s.id}" title="编辑">
             ${Icons.icon('pen', 13)}
           </button>
@@ -830,11 +811,9 @@ function openSnippetForm(snippet) {
   const hasLabel = !!(snippet && snippet.label && snippet.label.trim());
   snippetLabelInput.value = snippet ? (snippet.label || '') : '';
   snippetValueInput.value = snippet ? snippet.value : '';
-  snippetIsPassword.checked = snippet ? snippet.type === 'password' : false;
-  snippetValueInput.type = snippetIsPassword.checked ? 'password' : 'text';
+  snippetValueInput.type = 'text';
 
   // Show the name input only if we're editing AND the snippet already has a name.
-  // Otherwise start with a single input (user can click "命名" to add one).
   if (hasLabel) {
     snippetLabelInput.classList.remove('hidden');
     btnSnippetName.classList.add('hidden');
@@ -852,7 +831,6 @@ function closeSnippetForm() {
   snippetAddForm.classList.add('hidden');
   snippetLabelInput.value = '';
   snippetValueInput.value = '';
-  snippetIsPassword.checked = false;
   snippetLabelInput.classList.add('hidden');
   btnSnippetName.classList.remove('hidden');
   editingSnippetId = null;
@@ -861,12 +839,12 @@ function closeSnippetForm() {
 async function saveSnippet() {
   const label = snippetLabelInput.value.trim();
   const value = snippetValueInput.value;
-  if (!label || !value) return;
-  const type = snippetIsPassword.checked ? 'password' : 'text';
+  // Value is required; label is optional
+  if (!value) return;
   if (editingSnippetId) {
-    await window.api.updateSnippet(editingSnippetId, { label, value, type });
+    await window.api.updateSnippet(editingSnippetId, { label, value, type: 'text' });
   } else {
-    await window.api.addSnippet(label, value, type);
+    await window.api.addSnippet(label, value, 'text');
   }
   snippets = await window.api.getSnippets();
   renderSnippets();
@@ -919,10 +897,6 @@ btnAddSnippet.addEventListener('click', (e) => {
 btnCancelSnippet.addEventListener('click', closeSnippetForm);
 btnConfirmSnippet.addEventListener('click', saveSnippet);
 
-snippetIsPassword.addEventListener('change', () => {
-  snippetValueInput.type = snippetIsPassword.checked ? 'password' : 'text';
-});
-
 // "命名" button: reveal the name input inline and focus it.
 btnSnippetName.addEventListener('click', (e) => {
   e.preventDefault();
@@ -941,14 +915,13 @@ snippetValueInput.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeSnippetForm();
 });
 
-// List click handling (copy / edit / delete / reveal)
+// List click handling (copy / edit / delete)
 snippetsList.addEventListener('click', async (e) => {
   const actionEl = e.target.closest('[data-snip-action]');
   if (!actionEl) return;
   const action = actionEl.dataset.snipAction;
   const id = parseInt(actionEl.dataset.id);
 
-  // Actions on buttons should not also trigger the row copy
   if (action === 'edit') {
     e.stopPropagation();
     const s = snippets.find(x => x.id === id);
@@ -959,14 +932,6 @@ snippetsList.addEventListener('click', async (e) => {
     e.stopPropagation();
     await window.api.deleteSnippet(id);
     snippets = await window.api.getSnippets();
-    revealedSnippetIds.delete(id);
-    renderSnippets();
-    return;
-  }
-  if (action === 'reveal') {
-    e.stopPropagation();
-    if (revealedSnippetIds.has(id)) revealedSnippetIds.delete(id);
-    else revealedSnippetIds.add(id);
     renderSnippets();
     return;
   }
