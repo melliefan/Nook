@@ -268,6 +268,14 @@ class Store {
     this._save();
   }
 
+  reorderTask(id, targetIndex) {
+    const idx = this.data.tasks.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    const [t] = this.data.tasks.splice(idx, 1);
+    this.data.tasks.splice(targetIndex, 0, t);
+    this._save();
+  }
+
   // ======= Settings =======
 
   getSettings() {

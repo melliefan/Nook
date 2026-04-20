@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('api', {
   deleteTask: (id) => ipcRenderer.invoke('tasks:delete', id),
   updateTask: (id, updates) => ipcRenderer.invoke('tasks:update', id, updates),
   clearCompleted: () => ipcRenderer.invoke('tasks:clearCompleted'),
+  reorderTask: (id, targetIndex) => ipcRenderer.invoke('tasks:reorder', id, targetIndex),
 
   // Subtasks
   addSubtask: (taskId, title) => ipcRenderer.invoke('subtasks:add', taskId, title),
@@ -39,6 +40,12 @@ contextBridge.exposeInMainWorld('api', {
 
   // Panel
   requestHide: () => ipcRenderer.send('panel:requestHide'),
+  panelResize: (edge, deltaY) => ipcRenderer.send('panel:resize', edge, deltaY),
+  panelResizeEnd: () => ipcRenderer.send('panel:resizeEnd'),
+  panelWidthResize: (side, deltaX) => ipcRenderer.send('panel:widthResize', side, deltaX),
+  panelWidthResizeStart: (side) => ipcRenderer.send('panel:widthResizeStart', side),
+  panelWidthResizeEnd: () => ipcRenderer.send('panel:widthResizeEnd'),
+  panelPin: (pinned) => ipcRenderer.send('panel:pin', pinned),
   onPanelShow: (cb) => ipcRenderer.on('panel:show', cb),
   onPanelHide: (cb) => ipcRenderer.on('panel:hide', cb),
   onPanelSide: (cb) => ipcRenderer.on('panel:side', (_, side) => cb(side)),

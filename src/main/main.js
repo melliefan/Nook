@@ -7,20 +7,19 @@ let panelWindow = null;
 let store = null;
 let mousePoller = null;
 let isPanelVisible = false;
-// When repositioning the panel (corner switch), give the user a window of
-// time before we consider hiding the panel based on cursor position, so the
-// panel doesn't snap away before they can react.
 let hideSuppressUntilMs = 0;
+let showTimestamp = 0;
+let isPinned = false;
+let activeDisplayId = null; // which display the panel is currently on
+let widthResizePoller = null;
+let widthResizeSide = null;
+let widthResizeLastX = 0;
 const REPOSITION_GRACE_MS = 2500;
+const SHOW_GRACE_MS = 500;
 
-const TRIGGER_SIZE = 8;
+const TRIGGER_SIZE = 40;
 const PANEL_WIDTH = 380;
 const POLL_INTERVAL = 100;
-
-/** Wrapper around the pure layout function, injecting current display + panel width. */
-function computeLayout(corner) {
-  return computeLayoutPure(corner, screen.getPrimaryDisplay(), PANEL_WIDTH, TRIGGER_SIZE);
-}
 
 function getSetting(key, fallback) {
   try {
@@ -28,6 +27,21 @@ function getSetting(key, fallback) {
   } catch (_) {
     return fallback;
   }
+}
+
+/** Compute layout for a specific display. */
+function computeLayoutForDisplay(corner, display) {
+  const ratio = getSetting('panelHeightRatio', 0.75);
+  const width = getSetting('panelWidth', PANEL_WIDTH);
+  return computeLayoutPure(corner, display, width, TRIGGER_SIZE, ratio);
+}
+
+/** Compute layout using the active display (or primary as fallback). */
+function computeLayout(corner) {
+  const display = activeDisplayId
+    ? (screen.getAllDisplays().find(d => d.id === activeDisplayId) || screen.getPrimaryDisplay())
+    : screen.getPrimaryDisplay();
+  return computeLayoutForDisplay(corner, display);
 }
 
 function createPanelWindow() {
@@ -58,11 +72,6 @@ function createPanelWindow() {
   panelWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
   panelWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
-  panelWindow.on('blur', () => {
-    hidePanel();
-  });
-
-  // Re-layout when Dock / display metrics change.
   screen.on('display-metrics-changed', () => repositionPanel());
 }
 
@@ -72,14 +81,19 @@ function repositionPanel() {
   const { bounds, side } = computeLayout(corner);
   panelWindow.setBounds(bounds);
   panelWindow.webContents.send('panel:side', side);
-  // Grace period — give the user time to move the mouse to the new corner
-  // instead of auto-hiding as soon as the cursor happens to be in the hide zone.
   hideSuppressUntilMs = Date.now() + REPOSITION_GRACE_MS;
 }
 
-function showPanel() {
+/** Move panel to a specific display and show it. */
+function showPanelOnDisplay(display) {
   if (isPanelVisible || !panelWindow) return;
+  const corner = getSetting('cornerTrigger', 'top-left');
+  activeDisplayId = display.id;
+  const { bounds, side } = computeLayoutForDisplay(corner, display);
+  panelWindow.setBounds(bounds);
+  panelWindow.webContents.send('panel:side', side);
   isPanelVisible = true;
+  showTimestamp = Date.now();
   panelWindow.setIgnoreMouseEvents(false);
   panelWindow.focus();
   panelWindow.webContents.send('panel:show');
@@ -87,26 +101,34 @@ function showPanel() {
 
 function hidePanel() {
   if (!isPanelVisible || !panelWindow) return;
+  if (isPinned) return;
+  if (Date.now() - showTimestamp < SHOW_GRACE_MS) return;
   isPanelVisible = false;
   panelWindow.webContents.send('panel:hide');
   setTimeout(() => {
     if (!isPanelVisible && panelWindow) {
       panelWindow.setIgnoreMouseEvents(true, { forward: true });
     }
-  }, 320);
+  }, 500);
 }
 
 function startMousePolling() {
   mousePoller = setInterval(() => {
     const point = screen.getCursorScreenPoint();
     const corner = getSetting('cornerTrigger', 'top-left');
-    const { bounds, triggerMin, triggerMax, side } = computeLayout(corner);
 
     if (!isPanelVisible) {
-      if (inTrigger(point, triggerMin, triggerMax)) {
-        showPanel();
+      // Check trigger zones on ALL displays
+      const displays = screen.getAllDisplays();
+      for (const display of displays) {
+        const { triggerMin, triggerMax } = computeLayoutForDisplay(corner, display);
+        if (inTrigger(point, triggerMin, triggerMax)) {
+          showPanelOnDisplay(display);
+          return;
+        }
       }
     } else {
+      const { bounds, side } = computeLayout(corner);
       if (shouldHide(point, bounds, side, Date.now(), hideSuppressUntilMs)) {
         hidePanel();
       }
@@ -123,6 +145,7 @@ function setupIPC() {
   ipcMain.handle('tasks:delete', (_, id) => store.deleteTask(id));
   ipcMain.handle('tasks:update', (_, id, updates) => store.updateTask(id, updates));
   ipcMain.handle('tasks:clearCompleted', () => store.clearCompleted());
+  ipcMain.handle('tasks:reorder', (_, id, targetIndex) => store.reorderTask(id, targetIndex));
 
   // Subtasks
   ipcMain.handle('subtasks:add', (_, taskId, title) => store.addSubtask(taskId, title));
@@ -154,15 +177,115 @@ function setupIPC() {
   ipcMain.handle('store:getPath', () => store.getDataPath());
   ipcMain.handle('app:getVersion', () => app.getVersion());
 
-  // External link opener (for the attribution badge → GitHub)
   ipcMain.on('shell:openExternal', (_, url) => {
     if (typeof url === 'string' && /^https?:\/\//.test(url)) {
       shell.openExternal(url);
     }
   });
 
+  // Panel resize (height)
+  ipcMain.on('panel:resize', (_, edge, deltaY) => {
+    if (!panelWindow) return;
+    const bounds = panelWindow.getBounds();
+    const display = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
+    const work = display.workArea;
+    const minH = 280;
+    const maxH = work.height;
+
+    let newH, newY;
+    if (edge === 'top') {
+      newH = Math.max(minH, Math.min(maxH, bounds.height - deltaY));
+      newY = bounds.y + (bounds.height - newH);
+    } else {
+      newH = Math.max(minH, Math.min(maxH, bounds.height + deltaY));
+      newY = bounds.y;
+    }
+    if (newY < work.y) { newY = work.y; newH = bounds.y + bounds.height - work.y; }
+    panelWindow.setBounds({ x: bounds.x, y: newY, width: bounds.width, height: newH });
+  });
+
+  ipcMain.on('panel:resizeEnd', () => {
+    if (!panelWindow) return;
+    const bounds = panelWindow.getBounds();
+    const display = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
+    const work = display.workArea;
+    const ratio = bounds.height / work.height;
+    store.updateSettings({ panelHeightRatio: ratio, panelWidth: bounds.width });
+  });
+
+  // Panel resize (width) — driven by main-process polling so it works
+  // even when the mouse leaves the renderer window during drag.
+  ipcMain.on('panel:widthResizeStart', (_, side) => {
+    if (widthResizePoller) return;
+    widthResizeSide = side;
+    widthResizeLastX = screen.getCursorScreenPoint().x;
+    widthResizePoller = setInterval(() => {
+      if (!panelWindow) return;
+      const curX = screen.getCursorScreenPoint().x;
+      const deltaX = curX - widthResizeLastX;
+      widthResizeLastX = curX;
+      if (deltaX === 0) return;
+      const bounds = panelWindow.getBounds();
+      const display = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
+      const work = display.workArea;
+      const minW = 280;
+      const maxW = Math.min(work.width, 600);
+      let newW, newX;
+      if (widthResizeSide === 'left') {
+        newW = Math.max(minW, Math.min(maxW, bounds.width + deltaX));
+        newX = bounds.x;
+      } else {
+        newW = Math.max(minW, Math.min(maxW, bounds.width - deltaX));
+        newX = bounds.x + (bounds.width - newW);
+      }
+      panelWindow.setBounds({ x: newX, y: bounds.y, width: newW, height: bounds.height });
+    }, 16);
+  });
+
+  ipcMain.on('panel:widthResizeEnd', () => {
+    if (widthResizePoller) {
+      clearInterval(widthResizePoller);
+      widthResizePoller = null;
+    }
+    if (!panelWindow) return;
+    const bounds = panelWindow.getBounds();
+    const display = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
+    const work = display.workArea;
+    const ratio = bounds.height / work.height;
+    store.updateSettings({ panelHeightRatio: ratio, panelWidth: bounds.width });
+  });
+
+  // Legacy handler kept for compatibility
+  ipcMain.on('panel:widthResize', (_, side, deltaX) => {
+    if (!panelWindow) return;
+    const bounds = panelWindow.getBounds();
+    const display = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
+    const work = display.workArea;
+    const minW = 280;
+    const maxW = Math.min(work.width, 600);
+    let newW, newX;
+    if (side === 'left') {
+      newW = Math.max(minW, Math.min(maxW, bounds.width + deltaX));
+      newX = bounds.x;
+    } else {
+      newW = Math.max(minW, Math.min(maxW, bounds.width - deltaX));
+      newX = bounds.x + (bounds.width - newW);
+    }
+    panelWindow.setBounds({ x: newX, y: bounds.y, width: newW, height: bounds.height });
+  });
+
   // Panel
-  ipcMain.on('panel:requestHide', () => hidePanel());
+  ipcMain.on('panel:pin', (_, pinned) => {
+    isPinned = pinned;
+    if (!pinned && isPanelVisible) {
+      hideSuppressUntilMs = Date.now() + REPOSITION_GRACE_MS;
+    }
+  });
+
+  ipcMain.on('panel:requestHide', () => {
+    isPinned = false;
+    hidePanel();
+  });
 }
 
 app.whenReady().then(() => {
@@ -183,14 +306,18 @@ app.whenReady().then(() => {
   panelWindow.once('ready-to-show', () => {
     panelWindow.showInactive();
     panelWindow.setIgnoreMouseEvents(true, { forward: true });
-    // Tell renderer which side to slide from.
     const { side } = computeLayout(getSetting('cornerTrigger', 'top-left'));
     panelWindow.webContents.send('panel:side', side);
     startMousePolling();
   });
 
   globalShortcut.register('CommandOrControl+Shift+T', () => {
-    if (isPanelVisible) hidePanel(); else showPanel();
+    if (isPanelVisible) hidePanel();
+    else {
+      const point = screen.getCursorScreenPoint();
+      const display = screen.getDisplayNearestPoint(point);
+      showPanelOnDisplay(display);
+    }
   });
 
   app.dock?.hide();

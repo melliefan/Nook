@@ -74,29 +74,29 @@ let addPriority = 'none';
 let addDueDate = null;
 let addTags = [];
 let colorPickerTarget = null; // { tagName, origin: 'detail' | 'filter' }
+let currentSide = 'left';
 
-// ======= Tag 调色板：高饱和度霓虹色系（锚点 #FBF900 / #FF0BAC，色相环均匀铺开）=======
 const TAG_COLORS = [
-  '#FF2B3D', // 1  辣椒红
-  '#FF5722', // 2  火焰橙
-  '#FF8C00', // 3  琥珀
-  '#FFBE0B', // 4  金黄
-  '#FBF900', // 5  荧光黄 ★
-  '#C1FF00', // 6  柠檬绿
-  '#7FFF00', // 7  嫩草绿
-  '#2EFF3C', // 8  翠绿
-  '#00FFAA', // 9  青绿
-  '#00FFDD', // 10 薄荷青
-  '#00E5FF', // 11 天青
-  '#00A3FF', // 12 亮蓝
-  '#1744FF', // 13 钴蓝
-  '#5514FF', // 14 紫蓝
-  '#9013FF', // 15 紫
-  '#C40BFF', // 16 亮紫
-  '#F20AFF', // 17 品红
-  '#FF0BAC', // 18 亮粉 ★
-  '#FF0B7E', // 19 玫红
-  '#FF3D5D', // 20 粉红
+  '#FF6B6B', // 1  珊瑚红
+  '#FF8A65', // 2  暖橙
+  '#FFB74D', // 3  琥珀
+  '#FFD54F', // 4  金黄
+  '#FFF176', // 5  柠檬黄
+  '#DCE775', // 6  青柠
+  '#AED581', // 7  嫩草绿
+  '#81C784', // 8  翠绿
+  '#4DB6AC', // 9  青绿
+  '#4DD0E1', // 10 薄荷青
+  '#4FC3F7', // 11 天青
+  '#64B5F6', // 12 亮蓝
+  '#7986CB', // 13 薰衣草蓝
+  '#9575CD', // 14 紫蓝
+  '#BA68C8', // 15 紫
+  '#CE93D8', // 16 淡紫
+  '#F06292', // 17 玫粉
+  '#E57373', // 18 浅红
+  '#A1887F', // 19 暖棕
+  '#90A4AE', // 20 蓝灰
 ];
 
 const PRIORITY_CONFIG = {
@@ -105,6 +105,14 @@ const PRIORITY_CONFIG = {
   low:    { label: '低优先级', color: '#4B7BEC', order: 2 },
   none:   { label: '无优先级', color: '#B8B8B8', order: 3 },
 };
+
+// ======= Header Date =======
+function updateHeaderDate() {
+  const d = new Date();
+  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  headerTitle.textContent = `${d.getMonth() + 1}月${d.getDate()}日 · ${weekdays[d.getDay()]}`;
+}
+updateHeaderDate();
 
 // ======= Helpers =======
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
@@ -173,12 +181,12 @@ function getTagColor(tagName) {
 function tagColorStyle(tagName) {
   const c = getTagColor(tagName);
   if (!c) return '';
-  return `style="--tag-bg: ${c}40"`;
+  return `style="--tag-bg: ${c}33"`;
 }
 
 function tagChipHtml(tagName, removeAttr) {
   const c = getTagColor(tagName);
-  const colorStyle = c ? `style="--tag-bg:${c}40"` : '';
+  const colorStyle = c ? `style="--tag-bg:${c}33"` : '';
   const removeBtn = removeAttr
     ? `<button class="tag-remove" ${removeAttr}="${escapeHtml(tagName)}">&times;</button>`
     : '';
@@ -213,15 +221,9 @@ function renderTaskItem(task) {
     metaHtml += `<span class="task-date ${overdue ? 'overdue' : ''}">${Icons.icon('calendar', 11)}${formatDate(task.dueDate)}</span>`;
   }
   metaHtml += `<span class="task-priority-dot ${pClass}"></span>`;
-  const visibleTags = (task.tags || []).slice(0, 2);
-  const extraTagCount = (task.tags || []).length - visibleTags.length;
-  for (const tag of visibleTags) {
-    const c = getTagColor(tag);
-    const cs = c ? `style="--tag-bg:${c}40"` : '';
-    metaHtml += `<span class="task-tag" ${cs}>#${escapeHtml(tag)}</span>`;
-  }
-  if (extraTagCount > 0) {
-    metaHtml += `<span class="task-tag task-tag-more">+${extraTagCount}</span>`;
+  for (const tag of (task.tags || [])) {
+    const c = getTagColor(tag) || '#999';
+    metaHtml += `<span class="task-tag"><span class="tag-dot" style="background:${c}"></span>${escapeHtml(tag)}</span>`;
   }
   if (task.subtasks && task.subtasks.length > 0) {
     const done = task.subtasks.filter(s => s.completed).length;
@@ -234,7 +236,7 @@ function renderTaskItem(task) {
   }
 
   return `
-    <div class="task-item ${cClass}" data-id="${task.id}" draggable="${!task.completed}">
+    <div class="task-item ${cClass}" data-id="${task.id}">
       <div class="task-checkbox ${pClass}" data-action="toggle" data-id="${task.id}">
         <svg class="check-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 12l5.5 5.5L20 7"/>
@@ -254,20 +256,22 @@ function renderTaskItem(task) {
 }
 
 function renderTagFilterBar() {
-  const used = [...new Set(tasks.flatMap(t => t.tags || []))];
-  if (used.length === 0) { tagFilterBar.classList.add('hidden'); return; }
+  const activeTasks = tasks.filter(t => !t.completed);
+  const activeTags = [...new Set(activeTasks.flatMap(t => t.tags || []))];
+  const globalTagNames = Object.keys(allTags);
+  const allTagNames = [...new Set([...activeTags, ...globalTagNames])];
   tagFilterBar.classList.remove('hidden');
-  let html = `<div class="tag-filter-item tag-filter-all ${!filterTag ? 'active' : ''}" data-tag="">全部</div>`;
-  for (const tag of used) {
-    const c = getTagColor(tag);
+  let html = `<div class="tag-filter-item tag-filter-all ${!filterTag ? 'active' : ''}" data-tag="">all</div>`;
+  for (const tag of allTagNames) {
+    const c = getTagColor(tag) || '#999';
     const isActive = filterTag === tag;
-    // All tag text is dark gray regardless of bg color.
-    // Background: light tint (~25% alpha) when inactive, stronger tint (~70% alpha) when active.
-    const style = c
-      ? `style="background:${c}${isActive ? 'AA' : '40'}"`
-      : '';
-    html += `<div class="tag-filter-item ${isActive ? 'active' : ''}" data-tag="${escapeHtml(tag)}" ${style}>#${escapeHtml(tag)}</div>`;
+    const count = activeTasks.filter(t => (t.tags || []).includes(tag)).length;
+    const dotHtml = `<span class="tag-dot" style="background:${c}"></span>`;
+    const countHtml = count > 0 ? `<span class="tag-filter-count">${count}</span>` : '';
+    html += `<div class="tag-filter-item ${isActive ? 'active' : ''}" data-tag="${escapeHtml(tag)}">${dotHtml}${escapeHtml(tag)}${countHtml}<button class="tag-filter-close" data-tag-close="${escapeHtml(tag)}" title="完成该标签所有任务">&times;</button></div>`;
   }
+  html += `<div class="tag-filter-add" id="tagFilterAddBtn" title="新增标签">${Icons.icon('add-circle', 12)}</div>`;
+  html += `<input type="text" class="tag-filter-add-input hidden" id="tagFilterAddInput" placeholder="tag name" autocomplete="off" spellcheck="false">`;
   tagFilterScroll.innerHTML = html;
 }
 
@@ -332,7 +336,15 @@ async function updateTaskField(id, updates) {
 }
 
 // ======= Add Task UI =======
-function openAddTaskInput() { addTaskRow.classList.add('hidden'); addTaskInputArea.classList.remove('hidden'); taskInput.focus(); }
+function openAddTaskInput() {
+  addTaskRow.classList.add('hidden');
+  addTaskInputArea.classList.remove('hidden');
+  if (filterTag && !addTags.includes(filterTag)) {
+    addTags.push(filterTag);
+    updateAddFormUI();
+  }
+  taskInput.focus();
+}
 function closeAddTaskInput() { addTaskInputArea.classList.add('hidden'); addTaskRow.classList.remove('hidden'); taskInput.value = ''; addPriority = 'none'; addDueDate = null; addTags = []; updateAddFormUI(); closeAllPickers(); }
 
 function updateAddFormUI() {
@@ -497,7 +509,7 @@ function showColorPicker(tagName, anchorEl, origin) {
   const currentColor = getTagColor(tagName);
   colorPickerGrid.innerHTML = TAG_COLORS.map(c => {
     const isActive = c === currentColor;
-    return `<div class="color-swatch ${isActive ? 'active' : ''}" data-color="${c}" style="background:${c};color:#FFF">
+    return `<div class="color-swatch ${isActive ? 'active' : ''}" data-color="${c}" style="background:${c}55;border:2px solid ${c};color:${c}">
       <span class="swatch-check">${Icons.icon('check-circle', 14)}</span>
     </div>`;
   }).join('');
@@ -543,9 +555,45 @@ tagPickerList.addEventListener('click', (e) => { const item = e.target.closest('
 btnSort.addEventListener('click', (e) => { e.stopPropagation(); sortMenu.classList.toggle('hidden'); });
 sortMenu.addEventListener('click', (e) => { const o = e.target.closest('.sort-option'); if (!o) return; currentSort = o.dataset.sort; sortMenu.querySelectorAll('.sort-option').forEach(el => el.classList.toggle('active', el.dataset.sort === currentSort)); sortMenu.classList.add('hidden'); render(); });
 
-tagFilterScroll.addEventListener('click', (e) => { const item = e.target.closest('.tag-filter-item'); if (!item) return; filterTag = item.dataset.tag || null; render(); });
+tagFilterScroll.addEventListener('click', async (e) => {
+  // Close button on tag → complete all tasks with this tag
+  const closeBtn = e.target.closest('.tag-filter-close');
+  if (closeBtn) {
+    e.stopPropagation();
+    e.preventDefault();
+    const tagName = closeBtn.dataset.tagClose;
+    const toComplete = tasks.filter(t => !t.completed && t.tags.includes(tagName));
+    for (const task of toComplete) {
+      await toggleTask(task.id);
+    }
+    if (filterTag === tagName) filterTag = null;
+    render();
+    return;
+  }
+  const addBtn = e.target.closest('.tag-filter-add');
+  if (addBtn) return;
+  const item = e.target.closest('.tag-filter-item');
+  if (!item) return;
+  filterTag = item.dataset.tag || null;
+  render();
+});
+tagFilterScroll.addEventListener('contextmenu', (e) => {
+  const item = e.target.closest('.tag-filter-item');
+  if (!item || !item.dataset.tag) return;
+  e.preventDefault();
+  showColorPicker(item.dataset.tag, item, 'filter');
+});
 
 btnClose.addEventListener('click', () => window.api.requestHide());
+
+// Pin button
+const btnPin = document.getElementById('btnPin');
+let panelPinned = false;
+btnPin.addEventListener('click', () => {
+  panelPinned = !panelPinned;
+  btnPin.classList.toggle('pinned', panelPinned);
+  window.api.panelPin(panelPinned);
+});
 
 function handleTaskListClick(e) { const el = e.target.closest('[data-action]'); if (!el) return; const a = el.dataset.action; const id = parseInt(el.dataset.id); if (a === 'toggle') toggleTask(id); if (a === 'delete') deleteTask(id); if (a === 'detail') navigateToDetail(id); }
 activeList.addEventListener('click', handleTaskListClick);
@@ -681,15 +729,81 @@ document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'n') { e.preventDefault(); if (detailView.classList.contains('slide-in')) navigateToList(); openAddTaskInput(); }
 });
 
-// Drag & Drop
-let draggedId = null;
-function setupDragDrop(list) {
-  list.addEventListener('dragstart', (e) => { const item = e.target.closest('.task-item'); if (!item) return; draggedId = parseInt(item.dataset.id); item.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; list.classList.add('drag-over'); });
-  list.addEventListener('dragend', (e) => { const item = e.target.closest('.task-item'); if (item) item.classList.remove('dragging'); list.classList.remove('drag-over'); list.querySelectorAll('.drag-target-above,.drag-target-below').forEach(el => el.classList.remove('drag-target-above', 'drag-target-below')); draggedId = null; });
-  list.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const item = e.target.closest('.task-item'); if (!item || parseInt(item.dataset.id) === draggedId) return; list.querySelectorAll('.drag-target-above,.drag-target-below').forEach(el => el.classList.remove('drag-target-above', 'drag-target-below')); const r = item.getBoundingClientRect(); (e.clientY < r.top + r.height / 2) ? item.classList.add('drag-target-above') : item.classList.add('drag-target-below'); });
-  list.addEventListener('drop', (e) => { e.preventDefault(); const item = e.target.closest('.task-item'); if (!item || draggedId === null) return; const tid = parseInt(item.dataset.id); if (tid === draggedId) return; const active = tasks.filter(t => !t.completed); const di = active.findIndex(t => t.id === draggedId); const ti = active.findIndex(t => t.id === tid); if (di === -1 || ti === -1) return; const [mv] = active.splice(di, 1); const r = item.getBoundingClientRect(); const ins = e.clientY < r.top + r.height / 2 ? ti : ti + 1; active.splice(ins > di ? ins - 1 : ins, 0, mv); tasks = [...active, ...tasks.filter(t => t.completed)]; render(); });
-}
-setupDragDrop(activeList);
+// Drag & Drop (custom mouse-based for smooth feel)
+let dragState = null;
+
+activeList.addEventListener('mousedown', (e) => {
+  const item = e.target.closest('.task-item');
+  if (!item || e.target.closest('.task-checkbox, .task-action-btn, button')) return;
+  const id = parseInt(item.dataset.id);
+  const task = tasks.find(t => t.id === id);
+  if (!task || task.completed) return;
+  const startY = e.clientY;
+  const startX = e.clientX;
+  let activated = false;
+
+  const onMove = (me) => {
+    const dy = Math.abs(me.clientY - startY);
+    const dx = Math.abs(me.clientX - startX);
+    if (!activated && dy < 5) return;
+    if (!activated && dx > dy) { cleanup(); return; }
+    if (!activated) {
+      activated = true;
+      dragState = { id, el: item };
+      item.classList.add('dragging');
+      item.setAttribute('draggable', 'false');
+      document.body.style.cursor = 'grabbing';
+      document.body.style.userSelect = 'none';
+    }
+    activeList.querySelectorAll('.drag-target-above,.drag-target-below').forEach(el =>
+      el.classList.remove('drag-target-above', 'drag-target-below'));
+    const target = document.elementFromPoint(me.clientX, me.clientY)?.closest('.task-item');
+    if (target && target !== item) {
+      const r = target.getBoundingClientRect();
+      (me.clientY < r.top + r.height / 2)
+        ? target.classList.add('drag-target-above')
+        : target.classList.add('drag-target-below');
+    }
+  };
+
+  const onUp = async (me) => {
+    cleanup();
+    if (!activated || !dragState) return;
+    const target = document.elementFromPoint(me.clientX, me.clientY)?.closest('.task-item');
+    item.classList.remove('dragging');
+    activeList.querySelectorAll('.drag-target-above,.drag-target-below').forEach(el =>
+      el.classList.remove('drag-target-above', 'drag-target-below'));
+
+    if (target && target !== item) {
+      const tid = parseInt(target.dataset.id);
+      const active = tasks.filter(t => !t.completed);
+      const di = active.findIndex(t => t.id === dragState.id);
+      const ti = active.findIndex(t => t.id === tid);
+      if (di !== -1 && ti !== -1) {
+        const r = target.getBoundingClientRect();
+        const above = me.clientY < r.top + r.height / 2;
+        const [mv] = active.splice(di, 1);
+        const ins = above ? (ti > di ? ti - 1 : ti) : (ti > di ? ti : ti + 1);
+        active.splice(ins, 0, mv);
+        tasks = [...active, ...tasks.filter(t => t.completed)];
+        render();
+        const globalIdx = tasks.findIndex(t => t.id === dragState.id);
+        if (globalIdx !== -1) await window.api.reorderTask(dragState.id, globalIdx);
+      }
+    }
+    dragState = null;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  };
+
+  const cleanup = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+});
 
 // Panel
 window.api.onPanelShow(() => { panel.classList.add('visible'); loadTasks(); loadSnippets(); });
@@ -713,7 +827,8 @@ const attributionVersion = document.getElementById('attributionVersion');
     if (v && attributionVersion) attributionVersion.textContent = `v${v}`;
   } catch (_) {}
 })();
-attribution?.addEventListener('click', () => {
+attribution?.addEventListener('click', (e) => {
+  if (e.target.closest('.resize-grip')) return;
   window.api.openExternal(REPO_URL);
 });
 
@@ -894,6 +1009,7 @@ async function loadSettings() {
 }
 
 function applySide(side) {
+  currentSide = side;
   if (side === 'right') {
     panel.classList.add('side-right');
   } else {
@@ -929,3 +1045,142 @@ document.addEventListener('click', (e) => {
 window.api.onPanelSide((side) => applySide(side));
 
 loadSettings();
+
+// =============================================
+// Resize Grips (top + bottom)
+// =============================================
+const resizeGripTop = document.getElementById('resizeGripTop');
+const resizeGripBottom = document.getElementById('resizeGripBottom');
+let resizeStartY = 0;
+let isResizing = false;
+let resizeEdge = null;
+let activeGrip = null;
+
+function startResize(e, edge, grip) {
+  e.preventDefault();
+  e.stopPropagation();
+  isResizing = true;
+  resizeEdge = edge;
+  activeGrip = grip;
+  resizeStartY = e.screenY;
+  grip.classList.add('dragging');
+  document.body.classList.add('resizing');
+}
+
+resizeGripTop.addEventListener('mousedown', (e) => startResize(e, 'top', resizeGripTop));
+
+resizeGripBottom.addEventListener('mousedown', (e) => startResize(e, 'bottom', resizeGripBottom));
+
+function getContentMinHeight() {
+  let h = 0;
+  for (const child of listView.children) {
+    if (child.classList.contains('hidden')) continue;
+    const style = getComputedStyle(child);
+    if (style.position === 'absolute' || style.position === 'fixed') continue;
+    if (child.id === 'taskListContainer') {
+      // task list: count its natural content height (not scrollable)
+      h += child.scrollHeight;
+    } else {
+      h += child.offsetHeight;
+    }
+  }
+  return h;
+}
+
+document.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  const deltaY = e.screenY - resizeStartY;
+  const isShrink = (resizeEdge === 'top' && deltaY > 0) || (resizeEdge === 'bottom' && deltaY < 0);
+  if (isShrink) {
+    const minH = getContentMinHeight();
+    if (window.innerHeight <= minH + 8) return;
+  }
+  resizeStartY = e.screenY;
+  window.api.panelResize(resizeEdge, deltaY);
+});
+
+document.addEventListener('mouseup', () => {
+  if (!isResizing) return;
+  isResizing = false;
+  if (activeGrip) activeGrip.classList.remove('dragging');
+  activeGrip = null;
+  resizeEdge = null;
+  document.body.classList.remove('resizing');
+  window.api.panelResizeEnd();
+});
+
+// =============================================
+// Width Resize (side grip)
+// =============================================
+const resizeGripSide = document.getElementById('resizeGripSide');
+let isResizingWidth = false;
+let resizeStartX = 0;
+
+resizeGripSide.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  isResizingWidth = true;
+  resizeGripSide.classList.add('dragging');
+  document.body.classList.add('resizing-width');
+  window.api.panelWidthResizeStart(currentSide);
+});
+
+document.addEventListener('mouseup', () => {
+  if (!isResizingWidth) return;
+  isResizingWidth = false;
+  resizeGripSide.classList.remove('dragging');
+  document.body.classList.remove('resizing-width');
+  window.api.panelWidthResizeEnd();
+});
+
+// =============================================
+// Tag Filter Bar: Add Tag (event delegation)
+// =============================================
+tagFilterScroll.addEventListener('click', (e) => {
+  const addBtn = e.target.closest('.tag-filter-add');
+  if (addBtn) {
+    e.stopPropagation();
+    const input = tagFilterScroll.querySelector('.tag-filter-add-input');
+    if (input) {
+      input.classList.remove('hidden');
+      addBtn.classList.add('hidden');
+      input.value = '';
+      input.focus();
+    }
+    return;
+  }
+});
+
+tagFilterScroll.addEventListener('keydown', async (e) => {
+  const input = e.target.closest('.tag-filter-add-input');
+  if (!input) return;
+  if (e.key === 'Enter') {
+    const name = input.value.trim().replace(/^#/, '');
+    if (!name) return;
+    if (!allTags[name]) {
+      await window.api.setTagColor(name, null);
+      allTags = await window.api.getAllTags();
+    }
+    input.value = '';
+    render();
+    setTimeout(() => {
+      const chip = tagFilterScroll.querySelector(`[data-tag="${name}"]`);
+      if (chip) showColorPicker(name, chip, 'filter');
+    }, 50);
+  }
+  if (e.key === 'Escape') {
+    input.classList.add('hidden');
+    const addBtn = tagFilterScroll.querySelector('.tag-filter-add');
+    if (addBtn) addBtn.classList.remove('hidden');
+  }
+});
+
+tagFilterScroll.addEventListener('focusout', (e) => {
+  const input = e.target.closest('.tag-filter-add-input');
+  if (!input) return;
+  setTimeout(() => {
+    input.classList.add('hidden');
+    const addBtn = tagFilterScroll.querySelector('.tag-filter-add');
+    if (addBtn) addBtn.classList.remove('hidden');
+  }, 150);
+});

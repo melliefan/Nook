@@ -13,12 +13,16 @@
     <div class="view list-view" id="listView">
 
       <header class="header">
+        <!-- 顶部拖拽条 -->
+        <div class="resize-grip" id="resizeGripTop">
+          <div class="resize-grip-line"></div><div class="resize-grip-line"></div><div class="resize-grip-line"></div>
+        </div>
         <div class="header-left">
-          <div class="header-icon" data-icon="inbox" data-icon-size="20" data-icon-color="#595959"></div>
           <h1 class="header-title" id="headerTitle">收集箱</h1>
           <span class="header-count" id="headerCount">0</span>
         </div>
         <div class="header-right">
+          <button class="icon-btn" id="btnPin" title="固定浮窗"><span data-icon="pin" data-icon-size="16"></span></button>
           <button class="icon-btn" id="btnSort" title="排序"><span data-icon="sort" data-icon-size="18"></span></button>
           <button class="icon-btn" id="btnSettings" title="设置"><span data-icon="settings" data-icon-size="18"></span></button>
           <button class="icon-btn" id="btnClose" title="关闭"><span data-icon="close" data-icon-size="18"></span></button>
@@ -59,7 +63,7 @@
         <div class="add-task-row" id="addTaskRow">
           <button class="add-task-btn" id="addTaskBtn">
             <span data-icon="add-circle" data-icon-size="15"></span>
-            <span>添加任务</span>
+            <span>添加任务…</span>
           </button>
         </div>
         <div class="add-task-input-area hidden" id="addTaskInputArea">
@@ -178,6 +182,10 @@
         </div>
         <div class="attribution-right">
           <span class="attribution-version" id="attributionVersion">v0.1.0</span>
+        </div>
+        <!-- 底部拖拽条 -->
+        <div class="resize-grip" id="resizeGripBottom">
+          <div class="resize-grip-line"></div><div class="resize-grip-line"></div><div class="resize-grip-line"></div>
         </div>
       </div>
 
@@ -316,6 +324,11 @@
     <!-- 标签颜色选择器 -->
     <div class="color-picker-popover hidden" id="colorPickerPopover">
       <div class="color-picker-grid" id="colorPickerGrid"></div>
+    </div>
+
+    <!-- 侧边宽度拖拽条 -->
+    <div class="resize-grip-side" id="resizeGripSide">
+      <div class="resize-grip-line-v"></div><div class="resize-grip-line-v"></div><div class="resize-grip-line-v"></div>
     </div>
 
   </div>

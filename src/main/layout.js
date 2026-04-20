@@ -8,28 +8,32 @@
  *   - bounds = full screen
  *   - workArea = screen minus menu bar and Dock
  */
-function computeLayout(corner, display, panelWidth = 380, triggerSize = 8) {
+function computeLayout(corner, display, panelWidth = 380, triggerSize = 8, heightRatio = 1) {
   const work = display.workArea;
   const full = display.bounds;
 
   const side = corner.endsWith('-right') ? 'right' : 'left';
+  const isBottom = corner.startsWith('bottom');
+  const h = Math.max(300, Math.round(work.height * Math.min(1, Math.max(0.2, heightRatio))));
 
   const bounds = {
     x: side === 'left' ? work.x : work.x + work.width - panelWidth,
-    y: work.y,
+    y: isBottom ? work.y + work.height - h : work.y,
     width: panelWidth,
-    height: work.height,
+    height: h,
   };
 
+  // Trigger zones extend inward from workArea corners.
+  // This keeps them within the display, avoiding overlap with adjacent monitors.
   let triggerMin, triggerMax;
   if (corner === 'top-left') {
-    triggerMin = { x: 0, y: 0 };
+    triggerMin = { x: full.x, y: full.y };
     triggerMax = { x: work.x + triggerSize, y: work.y + triggerSize };
   } else if (corner === 'top-right') {
-    triggerMin = { x: work.x + work.width - triggerSize, y: 0 };
+    triggerMin = { x: work.x + work.width - triggerSize, y: full.y };
     triggerMax = { x: full.x + full.width, y: work.y + triggerSize };
   } else if (corner === 'bottom-left') {
-    triggerMin = { x: 0, y: work.y + work.height - triggerSize };
+    triggerMin = { x: full.x, y: work.y + work.height - triggerSize };
     triggerMax = { x: work.x + triggerSize, y: full.y + full.height };
   } else {
     triggerMin = { x: work.x + work.width - triggerSize, y: work.y + work.height - triggerSize };
@@ -41,17 +45,6 @@ function computeLayout(corner, display, panelWidth = 380, triggerSize = 8) {
 
 /**
  * Should hide the panel given current mouse position?
- *
- * - Only checks the side AWAY from the trigger (prevents flicker-loop).
- * - Respects a "hide suppression" grace period, e.g. right after the panel
- *   has been repositioned due to a corner-switch, so the panel doesn't
- *   vanish before the user has a chance to move to the new corner.
- *
- * @param {{x:number, y:number}} point
- * @param {{x:number, y:number, width:number, height:number}} bounds
- * @param {'left'|'right'} side
- * @param {number} [nowMs] - current time (injectable for tests)
- * @param {number} [suppressUntilMs=0] - if nowMs < this, never hide
  */
 function shouldHide(point, bounds, side, nowMs = Date.now(), suppressUntilMs = 0) {
   if (nowMs < suppressUntilMs) return false;
