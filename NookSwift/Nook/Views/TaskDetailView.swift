@@ -527,22 +527,25 @@ private struct CompactPriorityPicker: View {
     let colorScheme: ColorScheme
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 4) {
             ForEach(NookTask.Priority.allCases, id: \.self) { priority in
                 Button {
                     selectedPriority = priority
                     isPresented = false
                 } label: {
-                    NookIcon(.flag, size: 14)
-                        .foregroundStyle(Color(hex: priority.color).opacity(priority == selectedPriority ? 1 : 0.35))
-                        .frame(width: 24, height: 24)
-                        .background(priority == selectedPriority ? Color(hex: priority.color).opacity(0.12) : Color.clear, in: RoundedRectangle(cornerRadius: 8))
+                    NookIcon(.flag, size: 13)
+                        .foregroundStyle(Color(hex: priority.color).opacity(priority == selectedPriority ? 1 : 0.55))
+                        .frame(width: 22, height: 22)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help(priority.label)
             }
         }
-        .padding(10)
+        .padding(8)
+        // Override the macOS popover's translucent menu material with the panel's
+        // solid bg so flags don't pick up the gray haze behind them.
+        .background(NookTheme.bg(colorScheme))
     }
 }
 
@@ -554,6 +557,7 @@ private struct TagSelectorOverlay: View {
     @State private var searchText = ""
     @State private var pendingColor: String?
     @State private var showColorPicker = false
+    @State private var editingColorTag: String?
 
     /// 8-color picker palette — first 8 of Store.tagColors, distinct enough at a glance.
     private static let pickerColors: [String] = [
@@ -583,9 +587,14 @@ private struct TagSelectorOverlay: View {
         return !allTags.contains { $0.caseInsensitiveCompare(q) == .orderedSame }
     }
 
-    /// Auto-rotated default color for the next new tag — predictable, no randomness.
+    /// Auto-color for new tag: first palette color not yet used by any tag.
+    /// If all 8 are taken, fall back to count-based rotation.
     private var autoColor: String {
-        Self.pickerColors[store.tags.count % Self.pickerColors.count]
+        let used = Set(store.tags.values.map(\.color))
+        if let unused = Self.pickerColors.first(where: { !used.contains($0) }) {
+            return unused
+        }
+        return Self.pickerColors[store.tags.count % Self.pickerColors.count]
     }
 
     private var effectiveCreateColor: String { pendingColor ?? autoColor }
@@ -606,12 +615,9 @@ private struct TagSelectorOverlay: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 14)
-            .frame(height: 44)
-            .overlay(alignment: .bottom) {
-                Rectangle().fill(NookTheme.line(colorScheme)).frame(height: 1)
-            }
+            .frame(height: 40)
 
-            // Search / create input
+            // Search / create input — soft fill, no border, no dividers around it
             HStack(spacing: 7) {
                 NookIcon(.tag, size: 12)
                     .foregroundStyle(NookTheme.t4(colorScheme))
@@ -620,18 +626,15 @@ private struct TagSelectorOverlay: View {
                     .font(.nook(size: 12))
                     .onSubmit { commitCreateIfNeeded() }
                     .onChange(of: searchText) { _, _ in
-                        // If user keeps typing, reset color choice so autoColor stays in sync
                         if pendingColor == nil { showColorPicker = false }
                     }
             }
             .padding(.horizontal, 10)
             .frame(height: 32)
-            .background(NookTheme.bg(colorScheme), in: RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(NookTheme.line(colorScheme), lineWidth: 1))
+            .background(NookTheme.bg2(colorScheme).opacity(0.7), in: RoundedRectangle(cornerRadius: 8))
             .padding(.horizontal, 12)
-            .padding(.top, 10)
 
-            // List
+            // List — scroll indicators hidden for minimal look; trackpad scroll still works
             ScrollView {
                 VStack(spacing: 1) {
                     if canCreate {
@@ -643,13 +646,12 @@ private struct TagSelectorOverlay: View {
                 }
                 .padding(4)
             }
+            .scrollIndicators(.never)
             .frame(maxHeight: 252)
             .padding(.horizontal, 8)
             .padding(.top, 8)
 
-            // Footer
-            Rectangle().fill(NookTheme.line(colorScheme)).frame(height: 1)
-                .padding(.top, 8)
+            // Footer — no top divider, just generous spacing
             HStack {
                 Text(selectedTags.isEmpty ? "回车创建" : "\(selectedTags.count) 个已选")
                     .font(.nook(size: 10))
@@ -750,44 +752,105 @@ private struct TagSelectorOverlay: View {
         .background(NookTheme.bgHover(colorScheme).opacity(showColorPicker ? 0.5 : 0), in: RoundedRectangle(cornerRadius: 7))
     }
 
+    @ViewBuilder
     private func existingTagRow(_ tag: String) -> some View {
         let color = displayColor(for: tag)
         let isSelected = selectedTags.contains(tag)
-        return Button {
-            if isSelected {
-                selectedTags.removeAll { $0 == tag }
-            } else {
-                selectedTags.append(tag)
-            }
-        } label: {
+        let isEditing = editingColorTag == tag
+
+        VStack(spacing: 0) {
             HStack(spacing: 8) {
-                Circle().fill(Color(hex: color)).frame(width: 7, height: 7)
-                Text(tag)
-                    .font(.nook(size: 12, weight: .medium))
-                    .foregroundStyle(NookTheme.t1(colorScheme))
-                    .lineLimit(1)
-                Spacer()
-                let count = store.tasks.filter { $0.tags.contains(tag) }.count
-                if count > 0 {
-                    Text("\(count)")
-                        .font(.nook(size: 10, weight: .medium))
-                        .foregroundStyle(NookTheme.t4(colorScheme))
-                }
-                if isSelected {
+                // Color dot — clickable to open color editor (independent of select)
+                Button {
+                    editingColorTag = isEditing ? nil : tag
+                } label: {
                     Circle()
-                        .fill(NookTheme.accent(colorScheme))
+                        .fill(Color(hex: color))
+                        .frame(width: 11, height: 11)
+                        .overlay(Circle().stroke(.white, lineWidth: 1.5))
+                        .overlay(Circle().stroke(Color(hex: color).opacity(0.4), lineWidth: 1).padding(-1.5))
+                        .frame(width: 18, height: 18)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("点击改色")
+
+                // Name + count zone — clickable to select/deselect
+                HStack(spacing: 6) {
+                    Text(tag)
+                        .font(.nook(size: 12, weight: .medium))
+                        .foregroundStyle(NookTheme.t1(colorScheme))
+                        .lineLimit(1)
+                    Spacer()
+                    let count = store.tasks.filter { $0.tags.contains(tag) }.count
+                    if count > 0 {
+                        Text("\(count)")
+                            .font(.nook(size: 10, weight: .medium))
+                            .foregroundStyle(NookTheme.t4(colorScheme))
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if isSelected {
+                        selectedTags.removeAll { $0 == tag }
+                    } else {
+                        selectedTags.append(tag)
+                    }
+                }
+
+                // Right-side affordance: delete (when editing) OR subtle ✓ (when selected)
+                if isEditing {
+                    Button {
+                        store.deleteTag(tag)
+                        selectedTags.removeAll { $0 == tag }
+                        editingColorTag = nil
+                    } label: {
+                        NookIcon(.trash, size: 11)
+                            .foregroundStyle(NookTheme.t3(colorScheme))
+                            .frame(width: 18, height: 18)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("删除标签")
+                } else if isSelected {
+                    NookIcon(.checkmark, size: 10)
+                        .foregroundStyle(NookTheme.t2(colorScheme))
                         .frame(width: 14, height: 14)
-                        .overlay(NookIcon(.checkmark, size: 8).foregroundStyle(.white))
                 } else {
                     Color.clear.frame(width: 14, height: 14)
                 }
             }
             .padding(.horizontal, 10)
-            .frame(height: 32)
-            .background(isSelected ? NookTheme.bgHover(colorScheme).opacity(0.65) : Color.clear, in: RoundedRectangle(cornerRadius: 7))
-            .contentShape(Rectangle())
+            .frame(height: 30)
+
+            if isEditing {
+                HStack(spacing: 6) {
+                    ForEach(Self.pickerColors, id: \.self) { c in
+                        Button {
+                            store.setTagColor(tag, color: c)
+                            editingColorTag = nil
+                        } label: {
+                            ZStack {
+                                Circle().fill(Color(hex: c)).frame(width: 16, height: 16)
+                                if color == c {
+                                    NookIcon(.checkmark, size: 8).foregroundStyle(.white)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.leading, 32)
+                .padding(.trailing, 10)
+                .padding(.bottom, 6)
+            }
         }
-        .buttonStyle(.plain)
+        .background(
+            isEditing
+                ? NookTheme.bg2(colorScheme).opacity(0.85)
+                : Color.clear,
+            in: RoundedRectangle(cornerRadius: 7)
+        )
     }
 
     // MARK: - Actions

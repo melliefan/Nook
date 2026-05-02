@@ -89,6 +89,7 @@ struct PanelView: View {
             )
 
             TagFilterBarView(store: store)
+                .transaction { $0.animation = nil }
 
             TaskListView(store: store) { taskId in
                 openEditor(.edit(taskId))
@@ -286,11 +287,12 @@ struct AttributionView: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            NookIcon(.inbox, size: 12)
-                .foregroundStyle(.white)
-                .frame(width: 24, height: 24)
-                .background(NookTheme.accent(colorScheme), in: RoundedRectangle(cornerRadius: 7))
-                .shadow(color: NookTheme.accent(colorScheme).opacity(0.25), radius: 4, x: 0, y: 2)
+            // Use the actual app icon (the user's downloaded logo) — not a synthesized
+            // glyph on a colored block.
+            Image(nsImage: NSImage(named: "AppIcon") ?? NSImage())
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 30, height: 30)
             Text("Nook")
                 .font(.nook(size: 11, weight: .semibold))
                 .foregroundStyle(NookTheme.t2(colorScheme))

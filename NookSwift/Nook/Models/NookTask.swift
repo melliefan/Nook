@@ -31,11 +31,12 @@ struct NookTask: Codable, Identifiable, Equatable {
             }
         }
         var color: String {
+            // macOS system color palette — matches HTML design tokens
             switch self {
-            case .high: "#EB4D3D"
-            case .medium: "#FF9A14"
-            case .low: "#7CA776"
-            case .none: "#B8B8B8"
+            case .high: "#FF3B30"
+            case .medium: "#FF9500"
+            case .low: "#34C759"
+            case .none: "#8E8E93"
             }
         }
         var order: Int {

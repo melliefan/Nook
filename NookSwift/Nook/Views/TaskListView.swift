@@ -212,35 +212,37 @@ struct TaskRowView: View {
 
             Spacer(minLength: 4)
 
-            if isHovering {
-                HStack(spacing: 3) {
-                    if isReorderEnabled {
-                        NookIcon(.drag, size: 13)
-                            .foregroundStyle(NookTheme.t3(colorScheme))
-                            .frame(width: 24, height: 24)
-                            .contentShape(Rectangle())
-                            .onDrag {
-                                draggingTaskId = task.id
-                                return NSItemProvider(object: "\(task.id)" as NSString)
-                            }
-                            .help("拖拽排序")
-                    }
-                    Button { onDetail(task.id) } label: {
-                        NookIcon(.pen, size: 12)
-                            .foregroundStyle(NookTheme.t3(colorScheme))
-                            .frame(width: 24, height: 24)
-                    }
-                    .buttonStyle(.plain)
-                    Button {
-                        withAnimation(.easeOut(duration: 0.2)) { store.deleteTask(task.id) }
-                    } label: {
-                        NookIcon(.trash, size: 12)
-                            .foregroundStyle(.red.opacity(0.7))
-                            .frame(width: 24, height: 24)
-                    }
-                    .buttonStyle(.plain)
+            // Action icons always occupy layout space — only opacity/hit-testing flip on hover.
+            // Otherwise the row reflows when icons appear, causing tag chips to wrap mid-text.
+            HStack(spacing: 3) {
+                if isReorderEnabled {
+                    NookIcon(.drag, size: 13)
+                        .foregroundStyle(NookTheme.t3(colorScheme))
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
+                        .onDrag {
+                            draggingTaskId = task.id
+                            return NSItemProvider(object: "\(task.id)" as NSString)
+                        }
+                        .help("拖拽排序")
                 }
+                Button { onDetail(task.id) } label: {
+                    NookIcon(.pen, size: 12)
+                        .foregroundStyle(NookTheme.t3(colorScheme))
+                        .frame(width: 24, height: 24)
+                }
+                .buttonStyle(.plain)
+                Button {
+                    withAnimation(.easeOut(duration: 0.2)) { store.deleteTask(task.id) }
+                } label: {
+                    NookIcon(.trash, size: 12)
+                        .foregroundStyle(.red.opacity(0.7))
+                        .frame(width: 24, height: 24)
+                }
+                .buttonStyle(.plain)
             }
+            .opacity(isHovering ? 1 : 0)
+            .allowsHitTesting(isHovering)
         }
         .padding(.horizontal, isHovering ? 12 : 16)
         .padding(.vertical, 10)
@@ -297,12 +299,15 @@ struct TaskRowView: View {
         let hasSubs = !task.subtasks.isEmpty
 
         if hasDate || hasTags || hasSubs {
-            HStack(spacing: 8) {
+            // Flow layout — meta items stay full-size, wrap to a new line when row width
+            // is exceeded. Better than `…` truncation when many tags share the row.
+            WrappingHStack(spacing: 8, lineSpacing: 4) {
                 if let dateStr = task.formattedDueDate {
                     HStack(spacing: 3) {
                         NookIcon(.calendar, size: 11)
                         Text(dateStr)
                             .font(.nook(size: 11, weight: .medium))
+                            .lineLimit(1)
                     }
                     .foregroundStyle(task.isOverdue ? (colorScheme == .dark ? NookTheme.redDark : NookTheme.red) : NookTheme.accent(colorScheme))
                 }
@@ -315,6 +320,7 @@ struct TaskRowView: View {
                         Text(tag)
                             .font(.nook(size: 10, weight: .medium))
                             .foregroundStyle(NookTheme.t2(colorScheme))
+                            .lineLimit(1)
                     }
                 }
 
@@ -323,6 +329,7 @@ struct TaskRowView: View {
                     Text("子任务 \(done)/\(task.subtasks.count)")
                         .font(.nook(size: 10, weight: .medium))
                         .foregroundStyle(NookTheme.t3(colorScheme))
+                        .lineLimit(1)
                 }
             }
             .padding(.top, 5)
