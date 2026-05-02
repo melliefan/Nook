@@ -1,0 +1,143 @@
+{
+  "nextId": 2010,
+  "nextSnippetId": 120,
+  "settings": {
+    "cornerTrigger": "top-left",
+    "panelHeightRatio": 0.75,
+    "panelWidth": 380
+  },
+  "snippets": [
+    {
+      "id": 115,
+      "label": "邮箱",
+      "value": "hello@melliefan.com",
+      "type": "email",
+      "createdAt": "2026-04-20T08:30:00Z"
+    },
+    {
+      "id": 116,
+      "label": "Releases",
+      "value": "https://github.com/melliefan/nook/releases",
+      "type": "url",
+      "createdAt": "2026-04-22T10:12:00Z"
+    }
+  ],
+  "tags": {
+    "工作": {
+      "color": "#4FC3F7"
+    },
+    "UPclaw": {
+      "color": "#BA68C8"
+    },
+    "客户A": {
+      "color": "#FFB74D"
+    },
+    "市场运营": {
+      "color": "#81C784"
+    }
+  },
+  "tasks": [
+    {
+      "id": 1991,
+      "title": "客户A公司投标书",
+      "description": "整理预算方案 + 客户对接材料",
+      "completed": false,
+      "priority": "high",
+      "tags": ["工作", "客户A"],
+      "subtasks": [
+        {"id": 1, "title": "梳理招标要求", "completed": true},
+        {"id": 2, "title": "完成预算测算", "completed": false},
+        {"id": 3, "title": "封面与目录排版", "completed": false}
+      ],
+      "nextSubId": 4,
+      "dueDate": "2026-04-25",
+      "listId": "inbox",
+      "createdAt": "2026-04-26T07:30:00Z",
+      "completedAt": null
+    },
+    {
+      "id": 1992,
+      "title": "UPclaw 产品功能和前端设计",
+      "description": "客户主页 + 数据看板线框",
+      "completed": false,
+      "priority": "medium",
+      "tags": ["工作", "UPclaw"],
+      "subtasks": [],
+      "nextSubId": 1,
+      "dueDate": "2026-04-28",
+      "listId": "inbox",
+      "createdAt": "2026-04-26T07:30:01Z",
+      "completedAt": null
+    },
+    {
+      "id": 1993,
+      "title": "UPclaw skills 的优化",
+      "description": "",
+      "completed": false,
+      "priority": "low",
+      "tags": ["工作", "UPclaw"],
+      "subtasks": [],
+      "nextSubId": 1,
+      "dueDate": "2026-05-02",
+      "listId": "inbox",
+      "createdAt": "2026-04-26T07:30:02Z",
+      "completedAt": null
+    },
+    {
+      "id": 1994,
+      "title": "UPclaw 建设思路",
+      "description": "",
+      "completed": false,
+      "priority": "none",
+      "tags": ["工作", "UPclaw"],
+      "subtasks": [],
+      "nextSubId": 1,
+      "dueDate": null,
+      "listId": "inbox",
+      "createdAt": "2026-04-26T07:30:03Z",
+      "completedAt": null
+    },
+    {
+      "id": 1995,
+      "title": "在爬虫 boss 直聘",
+      "description": "",
+      "completed": false,
+      "priority": "none",
+      "tags": ["工作", "市场运营"],
+      "subtasks": [],
+      "nextSubId": 1,
+      "dueDate": null,
+      "listId": "inbox",
+      "createdAt": "2026-04-26T07:40:00Z",
+      "completedAt": null
+    },
+    {
+      "id": 1988,
+      "title": "更新 Nook 技术栈文档",
+      "description": "",
+      "completed": true,
+      "priority": "none",
+      "tags": [],
+      "subtasks": [],
+      "nextSubId": 1,
+      "dueDate": null,
+      "listId": "inbox",
+      "createdAt": "2026-04-23T09:00:00Z",
+      "completedAt": "2026-04-25T15:32:00Z"
+    },
+    {
+      "id": 1989,
+      "title": "提交周报",
+      "description": "",
+      "completed": true,
+      "priority": "none",
+      "tags": [],
+      "subtasks": [],
+      "nextSubId": 1,
+      "dueDate": null,
+      "listId": "inbox",
+      "createdAt": "2026-04-24T10:00:00Z",
+      "completedAt": "2026-04-26T18:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "nextId" : 1900,
+  "nextSnippetId" : 120,
+  "settings" : {
+    "cornerTrigger" : "top-left",
+    "panelHeightRatio" : 0.75,
+    "panelWidth" : 380
+  },
+  "snippets" : [
+    {
+      "id" : 115,
+      "label" : "邮箱",
+      "value" : "hello@melliefan.com",
+      "type" : "email",
+      "createdAt" : "2026-04-20T08:30:00Z"
+    },
+    {
+      "id" : 116,
+      "label" : "Releases",
+      "value" : "https://github.com/melliefan/nook/releases",
+      "type" : "url",
+      "createdAt" : "2026-04-22T10:12:00Z"
+    }
+  ],
+  "tags" : {
+    "工作" : { "color" : "#FF6B6B" },
+    "产品" : { "color" : "#4DD0E1" },
+    "LeetVibe" : { "color" : "#64B5F6" },
+    "客户A" : { "color" : "#FFB74D" },
+    "客户B" : { "color" : "#81C784" },
+    "客户" : { "color" : "#F06292" },
+    "UPclaw" : { "color" : "#BA68C8" }
+  },
+  "tasks" : [
+    {
+      "id" : 1893,
+      "title" : "还原编辑页视觉细节",
+      "description" : "对齐编辑页：标题、备注、日期、优先级、标签和子任务的视觉细节。",
+      "completed" : false,
+      "priority" : "high",
+      "tags" : ["产品", "工作"],
+      "subtasks" : [
+        { "id" : 1, "title" : "检查顶部导航高度", "completed" : true },
+        { "id" : 2, "title" : "统一备注页和编辑页字号", "completed" : false },
+        { "id" : 3, "title" : "压缩标签和任务间距", "completed" : false }
+      ],
+      "nextSubId" : 4,
+      "dueDate" : "2026-04-09",
+      "listId" : "inbox",
+      "createdAt" : "2026-04-09T09:00:00Z",
+      "completedAt" : null
+    },
+    {
+      "id" : 1894,
+      "title" : "新增按钮和右侧图标组对齐",
+      "description" : "右上新增入口需要轻，但要能被一眼看到。",
+      "completed" : false,
+      "priority" : "medium",
+      "tags" : ["LeetVibe"],
+      "subtasks" : [
+        { "id" : 1, "title" : "+ 按钮和 pin 按钮间距统一", "completed" : false }
+      ],
+      "nextSubId" : 2,
+      "dueDate" : "2026-04-27",
+      "listId" : "inbox",
+      "createdAt" : "2026-04-25T11:00:00Z",
+      "completedAt" : null
+    },
+    {
+      "id" : 1895,
+      "title" : "短任务",
+      "description" : "用于观察无日期、无子任务、短标题的轻量行。",
+      "completed" : false,
+      "priority" : "none",
+      "tags" : ["客户A"],
+      "subtasks" : [],
+      "nextSubId" : 1,
+      "dueDate" : null,
+      "listId" : "inbox",
+      "createdAt" : "2026-04-26T03:00:00Z",
+      "completedAt" : null
+    },
+    {
+      "id" : 1896,
+      "title" : "这是一条比较长的待办标题，用来观察两行文本时列表和编辑页是否还保持轻盈",
+      "description" : "长标题用于检查列表换行、详情页输入框高度和视觉留白。",
+      "completed" : false,
+      "priority" : "low",
+      "tags" : ["客户B", "客户", "UPclaw"],
+      "subtasks" : [],
+      "nextSubId" : 1,
+      "dueDate" : "2026-04-28",
+      "listId" : "inbox",
+      "createdAt" : "2026-04-25T15:30:00Z",
+      "completedAt" : null
+    },
+    {
+      "id" : 1897,
+      "title" : "Only",
+      "description" : "",
+      "completed" : true,
+      "priority" : "none",
+      "tags" : [],
+      "subtasks" : [],
+      "nextSubId" : 1,
+      "dueDate" : null,
+      "listId" : "inbox",
+      "createdAt" : "2026-04-26T06:21:37Z",
+      "completedAt" : "2026-04-26T07:00:00Z"
+    },
+    {
+      "id" : 1898,
+      "title" : "已完成的对照任务",
+      "description" : "用于检查 “已完成” 折叠区的样式。",
+      "completed" : true,
+      "priority" : "low",
+      "tags" : ["LeetVibe"],
+      "subtasks" : [],
+      "nextSubId" : 1,
+      "dueDate" : "2026-04-25",
+      "listId" : "inbox",
+      "createdAt" : "2026-04-24T09:00:00Z",
+      "completedAt" : "2026-04-25T18:00:00Z"
+    }
+  ]
+}

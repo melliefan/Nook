@@ -17,7 +17,7 @@ Thumbs.db
 *.pem
 *.key
 
-# Electron build artifacts
+# Build artifacts
 *.dmg
 *.zip
 *.pkg
@@ -25,6 +25,13 @@ Thumbs.db
 *.deb
 *.rpm
 *.AppImage
+
+# Swift build outputs
+NookSwift/build/
+NookSwift/Nook_bin
+NookSwift/test_runner
+NookSwift/Nook.xcodeproj/xcuserdata/
+NookSwift/Nook.xcodeproj/project.xcworkspace/xcuserdata/
 
 # IDE
 .vscode/

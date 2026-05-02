@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Nook · 新增标签 v2</title>
+<style>
+  :root {
+    --bg: #FCFCFD;
+    --bg2: #F1F1F4;
+    --bg-hover: #E8E8ED;
+    --t1: #1E1E2A;
+    --t2: #5C5C6E;
+    --t3: #8A8A96;
+    --t4: #BBBBC2;
+    --line: #DDDDE2;
+    --accent: #3A3A48;
+    --accent-bg: rgba(58,58,72,0.08);
+    --shadow: 0 8px 24px rgba(30,30,42,0.10), 0 2px 6px rgba(30,30,42,0.05);
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: #E5E5EA;
+    padding: 60px;
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    color: var(--t1);
+  }
+  .label-above {
+    color: var(--t3);
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  /* ============ Sheet ============ */
+  .sheet {
+    width: 300px;
+    background: var(--bg);
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .sheet-hd {
+    height: 44px;
+    padding: 0 14px 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+  }
+  .sheet-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--t1);
+    letter-spacing: -0.01em;
+  }
+  .sheet-close {
+    width: 22px; height: 22px;
+    display: grid; place-items: center;
+    border: none; background: transparent;
+    color: var(--t3); cursor: pointer;
+    border-radius: 6px;
+  }
+  .sheet-close:hover { background: var(--bg2); color: var(--t1); }
+
+  /* ============ Search input ============ */
+  .search {
+    margin: 10px 12px 0;
+    height: 32px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+  }
+  .search:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+  .search-ic {
+    color: var(--t4);
+    font-size: 12px;
+  }
+  .search-input {
+    flex: 1; min-width: 0;
+    border: none; outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--t1);
+  }
+  .search-input::placeholder { color: var(--t4); }
+
+  /* ============ Tag list ============ */
+  .tag-list {
+    margin: 8px 8px 0;
+    padding: 4px;
+    max-height: 252px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .tag-list::-webkit-scrollbar { width: 4px; }
+  .tag-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+
+  .tag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    height: 32px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.08s;
+    user-select: none;
+  }
+  .tag-row:hover { background: var(--bg2); }
+  .tag-row.selected { background: var(--accent-bg); }
+  .tag-row .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tag-row .name {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--t1);
+  }
+  .tag-row .count {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--t4);
+    margin-right: 2px;
+  }
+  .tag-row .check {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-size: 8px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .tag-row.selected .check { display: flex; }
+
+  /* "+ 创建" row when no match */
+  .tag-create-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    height: 32px;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .tag-create-row:hover { background: var(--accent-bg); }
+  .tag-create-row .plus {
+    width: 14px; height: 14px;
+    display: grid; place-items: center;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .tag-create-row .target {
+    color: var(--t1);
+    font-weight: 600;
+  }
+  .tag-create-row .swatch {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-left: 2px;
+  }
+
+  /* ============ Footer ============ */
+  .sheet-ft {
+    padding: 10px 12px 12px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .sheet-ft .hint {
+    font-size: 10px;
+    color: var(--t4);
+  }
+  .sheet-ft .actions {
+    display: flex;
+    gap: 6px;
+  }
+  .btn {
+    height: 28px;
+    padding: 0 14px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--t1);
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--bg2); }
+  .btn.primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .btn.primary:hover { opacity: 0.9; }
+
+  /* ============ Variant labels ============ */
+  .col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .desc {
+    font-size: 11px;
+    color: var(--t3);
+    line-height: 1.5;
+    width: 300px;
+    margin-top: 14px;
+    text-align: left;
+    background: var(--bg);
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+  .desc strong { color: var(--t1); font-weight: 600; }
+  .desc code {
+    background: var(--bg2);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================== Variant 1: 默认空态 ======================== -->
+<div class="col">
+  <div class="label-above">A — 默认（已有标签可选）</div>
+  <div class="sheet">
+    <div class="sheet-hd">
+      <div class="sheet-title">添加标签</div>
+      <button class="sheet-close">✕</button>
+    </div>
+    <div class="search">
+      <span class="search-ic">⌕</span>
+      <input class="search-input" placeholder="搜索或输入新标签">
+    </div>
+    <div class="tag-list">
+      <div class="tag-row selected">
+        <span class="dot" style="background:#4FC3F7"></span>
+        <span class="name">工作</span>
+        <span class="count">3</span>
+        <span class="check">✓</span>
+      </div>
+      <div class="tag-row">
+        <span class="dot" style="background:#BA68C8"></span>
+        <span class="name">UPclaw</span>
+        <span class="count">3</span>
+        <span class="check">✓</span>
+      </div>
+      <div class="tag-row selected">
+        <span class="dot" style="background:#FFB74D"></span>
+        <span class="name">客户A</span>
+        <span class="count">1</span>
+        <span class="check">✓</span>
+      </div>
+      <div class="tag-row">
+        <span class="dot" style="background:#81C784"></span>
+        <span class="name">市场运营</span>
+        <span class="count">1</span>
+        <span class="check">✓</span>
+      </div>
+    </div>
+    <div class="sheet-ft">
+      <div class="hint">2 个已选</div>
+      <div class="actions">
+        <button class="btn">取消</button>
+        <button class="btn primary">完成</button>
+      </div>
+    </div>
+  </div>
+  <div class="desc">
+    <strong>核心交互</strong><br>
+    1. 直接点击已有标签 chip 切换选中态<br>
+    2. 输入框输入文字 → 列表实时过滤<br>
+    3. 列表无匹配时，自动出现 "+ 创建 'xxx'" 行<br>
+    4. 颜色：自动从 8 色调色板按顺序分配，<strong>不需要选</strong><br>
+    5. 想改颜色 → 创建后右键 chip 再选
+  </div>
+</div>
+
+<!-- ======================== Variant: Color popover ======================== -->
+<div class="col">
+  <div class="label-above">C — 改颜色（右键 chip / 点击色点）</div>
+  <div style="position:relative;">
+    <!-- Mock home tag bar with one chip showing color popover -->
+    <div style="background:var(--bg); padding:14px 16px; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); width:300px;">
+      <div style="font-size:11px; color:var(--t3); margin-bottom:8px;">首页标签栏</div>
+      <div style="display:flex; flex-wrap:wrap; gap:5px;">
+        <div style="height:24px; padding:0 10px; border-radius:999px; background:var(--accent); color:white; font-size:11px; font-weight:500; display:flex; align-items:center;">all</div>
+        <div style="height:24px; padding:0 10px; border-radius:999px; background:rgba(79,195,247,0.10); color:var(--t2); font-size:11px; font-weight:500; display:flex; align-items:center; gap:4px; outline:2px solid var(--accent); outline-offset:1px; position:relative;">
+          <span style="width:6px; height:6px; border-radius:50%; background:#4FC3F7;"></span>
+          工作
+          <span style="font-size:10px; opacity:.55;">3</span>
+        </div>
+        <div style="height:24px; padding:0 10px; border-radius:999px; background:rgba(186,104,200,0.10); color:var(--t2); font-size:11px; font-weight:500; display:flex; align-items:center; gap:4px;">
+          <span style="width:6px; height:6px; border-radius:50%; background:#BA68C8;"></span>
+          UPclaw
+          <span style="font-size:10px; opacity:.55;">3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Color popover anchored to "工作" chip -->
+    <div style="position:absolute; top:62px; left:60px; background:var(--bg); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); padding:10px; z-index:10;">
+      <div style="font-size:10px; color:var(--t3); margin-bottom:7px; display:flex; justify-content:space-between; align-items:center;">
+        <span>设置 "工作" 颜色</span>
+        <button style="border:none; background:none; color:var(--t4); cursor:pointer; padding:0; font-size:11px;">✕</button>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(5, 22px); gap:7px;">
+        <div style="width:22px; height:22px; border-radius:50%; background:#FF6B6B; cursor:pointer;"></div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#FF8A65; cursor:pointer;"></div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#FFB74D; cursor:pointer;"></div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#FFD54F; cursor:pointer;"></div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#81C784; cursor:pointer;"></div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#4FC3F7; cursor:pointer; display:grid; place-items:center; color:white; font-size:9px; font-weight:600;">✓</div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#7986CB; cursor:pointer;"></div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#BA68C8; cursor:pointer;"></div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#A1887F; cursor:pointer;"></div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#90A4AE; cursor:pointer;"></div>
+      </div>
+      <div style="height:1px; background:var(--line); margin:9px -10px 7px;"></div>
+      <button style="border:none; background:none; color:#D32F2F; font-size:11px; cursor:pointer; padding:4px 0; width:100%; text-align:left; font-weight:500;">删除标签</button>
+    </div>
+  </div>
+  <div class="desc" style="margin-top:80px;">
+    <strong>触发</strong>：右键标签 chip（首页 / 详情页 / sheet 都一致）<br>
+    <strong>布局</strong>：5×2 圆点（10 色）+ 当前色 ✓ 高亮 + 底部"删除标签"<br>
+    <strong>关闭</strong>：选完一个色 → 立刻应用 + 自动关闭；点 ✕ / 点空白处也关<br>
+    <strong>无确认按钮</strong>：单击即生效，撤销靠 ⌘Z（如果实现）<br><br>
+    <strong>新建标签时自动配色</strong>：调色板按 <code>tags.count % palette.length</code> 顺序分配，永远确定，用户不参与
+  </div>
+</div>
+
+<!-- ======================== Variant 2: 输入触发创建 ======================== -->
+<div class="col">
+  <div class="label-above">B — 输入"客户" → 默认色</div>
+  <div class="sheet">
+    <div class="sheet-hd">
+      <div class="sheet-title">添加标签</div>
+      <button class="sheet-close">✕</button>
+    </div>
+    <div class="search">
+      <span class="search-ic">⌕</span>
+      <input class="search-input" value="客户" placeholder="搜索或输入新标签">
+    </div>
+    <div class="tag-list">
+      <div class="tag-create-row">
+        <span class="plus">+</span>
+        <span>创建</span>
+        <span class="target">"客户"</span>
+        <span class="swatch" style="background:#FF6B6B; border:1.5px solid white; box-shadow:0 0 0 1px #FF6B6B; cursor:pointer;" title="点击换色"></span>
+      </div>
+      <div style="height:1px; background:var(--line); margin:4px 8px;"></div>
+      <div class="tag-row">
+        <span class="dot" style="background:#FFB74D"></span>
+        <span class="name">客户A</span>
+        <span class="count">1</span>
+        <span class="check">✓</span>
+      </div>
+    </div>
+    <div class="sheet-ft">
+      <div class="hint">回车创建</div>
+      <div class="actions">
+        <button class="btn">取消</button>
+        <button class="btn primary">完成</button>
+      </div>
+    </div>
+  </div>
+  <div class="desc">
+    <strong>默认流程（最快）</strong><br>
+    • 输入"客户" → 列表顶部出现 "+ 创建" 行<br>
+    • 右侧 ● 是自动分配的下一个调色板色（外圈白边 = 暗示可点击）<br>
+    • <strong>不点 ●，直接回车</strong> → 用默认色创建并选中
+  </div>
+</div>
+
+<!-- ======================== Variant 4: 创建时点色点换色 ======================== -->
+<div class="col">
+  <div class="label-above">D — 点 ● 展开色板换色</div>
+  <div class="sheet">
+    <div class="sheet-hd">
+      <div class="sheet-title">添加标签</div>
+      <button class="sheet-close">✕</button>
+    </div>
+    <div class="search">
+      <span class="search-ic">⌕</span>
+      <input class="search-input" value="客户" placeholder="搜索或输入新标签">
+    </div>
+    <div class="tag-list">
+      <div class="tag-create-row" style="background:var(--accent-bg); flex-direction:column; align-items:flex-start; height:auto; padding:8px 10px; gap:6px;">
+        <div style="display:flex; align-items:center; gap:8px; width:100%;">
+          <span class="plus">+</span>
+          <span>创建</span>
+          <span class="target">"客户"</span>
+          <span class="swatch" style="background:#81C784; width:8px; height:8px; border:1.5px solid white; box-shadow:0 0 0 1px #81C784;"></span>
+        </div>
+        <div style="display:flex; gap:5px; padding-left:22px; padding-bottom:2px;">
+          <span style="width:16px; height:16px; border-radius:50%; background:#FF6B6B; cursor:pointer;"></span>
+          <span style="width:16px; height:16px; border-radius:50%; background:#FF8A65; cursor:pointer;"></span>
+          <span style="width:16px; height:16px; border-radius:50%; background:#FFB74D; cursor:pointer;"></span>
+          <span style="width:16px; height:16px; border-radius:50%; background:#FFD54F; cursor:pointer;"></span>
+          <span style="width:16px; height:16px; border-radius:50%; background:#81C784; cursor:pointer; display:grid; place-items:center; color:white; font-size:8px; font-weight:600;">✓</span>
+          <span style="width:16px; height:16px; border-radius:50%; background:#4FC3F7; cursor:pointer;"></span>
+          <span style="width:16px; height:16px; border-radius:50%; background:#7986CB; cursor:pointer;"></span>
+          <span style="width:16px; height:16px; border-radius:50%; background:#BA68C8; cursor:pointer;"></span>
+        </div>
+      </div>
+      <div style="height:1px; background:var(--line); margin:4px 8px;"></div>
+      <div class="tag-row">
+        <span class="dot" style="background:#FFB74D"></span>
+        <span class="name">客户A</span>
+        <span class="count">1</span>
+        <span class="check">✓</span>
+      </div>
+    </div>
+    <div class="sheet-ft">
+      <div class="hint">回车创建</div>
+      <div class="actions">
+        <button class="btn">取消</button>
+        <button class="btn primary">完成</button>
+      </div>
+    </div>
+  </div>
+  <div class="desc">
+    <strong>展开色板（点 ● 后）</strong><br>
+    • 点击右侧 ● → 创建行向下展开一行 8 色板<br>
+    • 单击任一色 → 顶部 ● 立刻更新（看到的就是即将创建的色）<br>
+    • <strong>不需要"完成"按钮</strong>，回车依旧创建<br>
+    • 再点 ● 收起色板（或选完自动收）<br>
+    • 不影响下方"已有标签"列表正常浏览
+  </div>
+</div>
+
+</body>
+</html>

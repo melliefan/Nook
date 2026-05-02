@@ -1,0 +1,321 @@
+#!/usr/bin/env python3
+"""nooktodo — quick CLI for the Nook macOS panel.
+
+Writes to ~/Library/Application Support/Nook/data/tasks.json (the same store
+the Nook.app reads on launch). When Nook is running, it gets pkill'd and
+relaunched so the new task sticks.
+
+Usage examples:
+  nooktodo "买牛奶"
+  nooktodo "汇报 PPT" -t 工作 -t 客户A -p high -d tomorrow
+  nooktodo "汇报 PPT" -t 工作,客户A -p high -d tomorrow         # comma form
+  nooktodo "投标书" --desc "整理预算方案 + 客户对接材料" \
+           -t 工作 -t 客户A -p high -d 2026-04-30 \
+           -s "梳理招标要求" -s "完成预算测算" -s "封面排版"
+  nooktodo ls                                                  # active tasks
+  nooktodo ls --all                                            # include done
+  nooktodo ls --tag 工作                                       # filter
+  nooktodo done 1991                                           # mark complete
+  nooktodo rm 1991                                             # delete by id
+  nooktodo tags                                                # list tags
+
+Title vs description vs subtasks:
+  - title:    the positional arg (one line)
+  - desc:     --desc "..." (multi-line ok via shell quoting)
+  - subtasks: -s "..." per subtask, repeat for more
+  - tags:     -t repeatable, or comma-joined inside one -t
+
+Exit codes: 0 ok, 1 user error, 2 store missing.
+"""
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+STORE = Path.home() / "Library/Application Support/Nook/data/tasks.json"
+APP_NAME = "Nook"
+APP_PATH_HINTS = [
+    "/Users/mellie/Desktop/ME/便签app/NookSwift/build/Nook.app",
+    "/Applications/Nook.app",
+]
+PRIORITIES = ("high", "medium", "low", "none")
+
+
+def die(msg, code=1):
+    print(f"nooktodo: {msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def now_iso():
+    # Nook stores UTC ISO with Z suffix
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def parse_due(value):
+    """Accept 'today' / 'tomorrow' / '+3d' / 'YYYY-MM-DD'."""
+    v = value.strip().lower()
+    today = datetime.now().date()
+    if v in ("today", "今天"):
+        return today.isoformat()
+    if v in ("tomorrow", "tmr", "明天"):
+        return (today + timedelta(days=1)).isoformat()
+    m = re.fullmatch(r"\+(\d+)d", v)
+    if m:
+        return (today + timedelta(days=int(m.group(1)))).isoformat()
+    m = re.fullmatch(r"-(\d+)d", v)
+    if m:
+        return (today - timedelta(days=int(m.group(1)))).isoformat()
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date().isoformat()
+    except ValueError:
+        die(f"unrecognized --due {value!r} (use today/tomorrow/+3d/2026-05-01)")
+
+
+def load_store():
+    if not STORE.exists():
+        die(f"store not found: {STORE}\nrun Nook.app at least once first", code=2)
+    try:
+        return json.loads(STORE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        die(f"store is corrupt: {e}", code=2)
+
+
+def save_store(data):
+    STORE.parent.mkdir(parents=True, exist_ok=True)
+    tmp = STORE.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(STORE)
+
+
+def nook_pid():
+    try:
+        out = subprocess.run(
+            ["pgrep", "-f", f"{APP_NAME}.app"],
+            capture_output=True, text=True, check=False,
+        ).stdout.strip()
+        return [int(x) for x in out.split() if x.isdigit()]
+    except FileNotFoundError:
+        return []
+
+
+def restart_nook_if_needed(was_running):
+    if not was_running:
+        return
+    for hint in APP_PATH_HINTS:
+        if Path(hint).exists():
+            subprocess.run(["open", hint], check=False)
+            return
+    # last resort: launch by bundle id (won't work since no id registered)
+    subprocess.run(["open", "-a", APP_NAME], check=False)
+
+
+def with_pause(fn):
+    """Pkill Nook around fn() so its in-memory state can't overwrite our edit."""
+    pids = nook_pid()
+    was_running = bool(pids)
+    if was_running:
+        subprocess.run(["pkill", "-f", f"{APP_NAME}.app"], check=False)
+        # tiny wait for the file lock to release
+        import time
+        time.sleep(0.2)
+    try:
+        fn()
+    finally:
+        restart_nook_if_needed(was_running)
+
+
+def _expand_tags(raw):
+    """Accept both `-t 工作 -t 客户A` (repeated) and `-t 工作,客户A` (comma)."""
+    out = []
+    for chunk in raw or []:
+        for piece in re.split(r"[,，]", chunk):
+            piece = piece.strip().lstrip("#")
+            if piece:
+                out.append(piece)
+    # de-dup while preserving order
+    seen = set()
+    return [t for t in out if not (t in seen or seen.add(t))]
+
+
+def cmd_add(args):
+    data = load_store()
+    next_id = int(data.get("nextId", 1))
+    title = args.title.strip()
+    if not title:
+        die("title cannot be empty")
+
+    # auto-register unknown tags with deterministic colors
+    palette = [
+        "#FF6B6B", "#FF8A65", "#FFB74D", "#FFD54F",
+        "#81C784", "#4FC3F7", "#7986CB", "#BA68C8",
+    ]
+    tags = _expand_tags(args.tags)
+    tags_dict = data.setdefault("tags", {})
+    for tag in tags:
+        if tag not in tags_dict:
+            color = palette[len(tags_dict) % len(palette)]
+            tags_dict[tag] = {"color": color}
+
+    sub_titles = [s.strip() for s in (args.subs or []) if s and s.strip()]
+    subtasks = [
+        {"id": i + 1, "title": t, "completed": False}
+        for i, t in enumerate(sub_titles)
+    ]
+
+    task = {
+        "id": next_id,
+        "title": title,
+        "description": args.desc or "",
+        "completed": False,
+        "priority": args.priority or "none",
+        "tags": tags,
+        "subtasks": subtasks,
+        "nextSubId": len(subtasks) + 1,
+        "dueDate": parse_due(args.due) if args.due else None,
+        "listId": "inbox",
+        "createdAt": now_iso(),
+        "completedAt": None,
+    }
+    data.setdefault("tasks", []).append(task)
+    data["nextId"] = next_id + 1
+
+    with_pause(lambda: save_store(data))
+
+    print(f"added #{next_id}: {title}")
+    parts = []
+    if task["dueDate"]:
+        parts.append(f"due {task['dueDate']}")
+    if tags:
+        parts.append(f"tags {','.join(tags)}")
+    if task["priority"] != "none":
+        parts.append(f"priority {task['priority']}")
+    if subtasks:
+        parts.append(f"subs {len(subtasks)}")
+    if task["description"]:
+        first_line = task["description"].splitlines()[0]
+        snippet = (first_line[:30] + "…") if len(first_line) > 30 else first_line
+        parts.append(f"desc {snippet!r}")
+    if parts:
+        print("  " + "  ".join(parts))
+
+
+def fmt_task(t):
+    bits = [f"#{t['id']}", t["title"]]
+    if t.get("dueDate"):
+        bits.append(f"⏰{t['dueDate']}")
+    if t.get("priority") and t["priority"] != "none":
+        bits.append(f"!{t['priority']}")
+    if t.get("tags"):
+        bits.append("·".join(t["tags"]))
+    if t.get("subtasks"):
+        done = sum(1 for s in t["subtasks"] if s.get("completed"))
+        bits.append(f"📋{done}/{len(t['subtasks'])}")
+    return "  ".join(bits)
+
+
+def cmd_ls(args):
+    data = load_store()
+    tasks = data.get("tasks", [])
+    if not args.all:
+        tasks = [t for t in tasks if not t.get("completed")]
+    if args.tag:
+        tasks = [t for t in tasks if args.tag in (t.get("tags") or [])]
+    if not tasks:
+        print("(empty)")
+        return
+    for t in tasks:
+        prefix = "✔" if t.get("completed") else "○"
+        print(f"{prefix} {fmt_task(t)}")
+
+
+def cmd_done(args):
+    data = load_store()
+    tasks = data.get("tasks", [])
+    for t in tasks:
+        if t["id"] == args.id:
+            if t.get("completed"):
+                die(f"#{args.id} already done")
+            t["completed"] = True
+            t["completedAt"] = now_iso()
+            with_pause(lambda: save_store(data))
+            print(f"done #{args.id}: {t['title']}")
+            return
+    die(f"id {args.id} not found")
+
+
+def cmd_rm(args):
+    data = load_store()
+    tasks = data.get("tasks", [])
+    for i, t in enumerate(tasks):
+        if t["id"] == args.id:
+            removed = tasks.pop(i)
+            with_pause(lambda: save_store(data))
+            print(f"removed #{args.id}: {removed['title']}")
+            return
+    die(f"id {args.id} not found")
+
+
+def cmd_tags(_args):
+    data = load_store()
+    tags = data.get("tags", {}) or {}
+    if not tags:
+        print("(no tags)")
+        return
+    for name, info in sorted(tags.items()):
+        color = (info or {}).get("color", "")
+        count = sum(1 for t in data.get("tasks", []) if name in (t.get("tags") or []) and not t.get("completed"))
+        print(f"  {name}  {color}  ({count})")
+
+
+def build_parser():
+    p = argparse.ArgumentParser(
+        prog="nooktodo",
+        description="Add/inspect Nook todos from the terminal.",
+    )
+    sub = p.add_subparsers(dest="cmd")
+
+    add = sub.add_parser("add", help="add a task (default)")
+    add.add_argument("title", help="task title (single line)")
+    add.add_argument("-t", "--tag", dest="tags", action="append",
+                     help="tag — repeatable (`-t a -t b`) or comma-joined (`-t a,b`)")
+    add.add_argument("-p", "--priority", choices=PRIORITIES,
+                     help="high | medium | low | none")
+    add.add_argument("-d", "--due",
+                     help="today | tomorrow | +3d | -2d | YYYY-MM-DD")
+    add.add_argument("--desc", help="description / note (multi-line ok)")
+    add.add_argument("-s", "--sub", dest="subs", action="append",
+                     help="subtask title — repeatable")
+
+    ls = sub.add_parser("ls", help="list tasks")
+    ls.add_argument("--all", action="store_true", help="include completed")
+    ls.add_argument("--tag", help="filter by tag")
+
+    done = sub.add_parser("done", help="mark a task complete")
+    done.add_argument("id", type=int)
+
+    rm = sub.add_parser("rm", help="delete a task")
+    rm.add_argument("id", type=int)
+
+    sub.add_parser("tags", help="list known tags")
+    return p
+
+
+def main(argv):
+    parser = build_parser()
+    # bare-positional shortcut: `nooktodo "buy milk"` → add
+    if argv and argv[0] not in {"add", "ls", "done", "rm", "tags", "-h", "--help"}:
+        argv = ["add"] + argv
+    args = parser.parse_args(argv)
+    if args.cmd is None:
+        parser.print_help()
+        return
+    {"add": cmd_add, "ls": cmd_ls, "done": cmd_done, "rm": cmd_rm, "tags": cmd_tags}[args.cmd](args)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
