@@ -6,13 +6,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var store: Store!
     private var panelController: PanelController!
     private var hotCornerManager: HotCornerManager!
-    private var globalKeyMonitor: Any?
     private var pinCancellable: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        switch UserDefaults.standard.string(forKey: "nook_appearance") ?? "system" {
+        switch UserDefaults.standard.string(forKey: "nook_appearance") ?? "light" {
         case "light": NSApp.appearance = NSAppearance(named: .aqua)
         case "dark":  NSApp.appearance = NSAppearance(named: .darkAqua)
         default:      NSApp.appearance = nil
@@ -46,15 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.hotCornerManager.isPinned = pinned
         }
 
-        globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 17 {
-                Task { @MainActor in
-                    guard let self else { return }
-                    self.panelController.toggle()
-                    self.hotCornerManager.setShowing(self.panelController.isVisible)
-                }
-            }
-        }
+        // No keyboard shortcut — hot corner is the sole trigger.
 
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 350_000_000)
@@ -64,9 +55,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         hotCornerManager?.stop()
-        if let monitor = globalKeyMonitor {
-            NSEvent.removeMonitor(monitor)
-        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

@@ -40,6 +40,11 @@ if [ -f scripts/nooktodo ]; then
   chmod 755 "$APP_DIR/Resources/nooktodo"
 fi
 
+# Bundle the empty-state illustration
+if [ -f Nook/Resources/empty-state.png ]; then
+  cp Nook/Resources/empty-state.png "$APP_DIR/Resources/empty-state.png"
+fi
+
 # Copy app icon from Electron build if available
 ICON_SRC="../build/icon.icns"
 if [ -f "$ICON_SRC" ]; then

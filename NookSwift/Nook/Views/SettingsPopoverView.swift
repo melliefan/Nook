@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SettingsPopoverView: View {
     @ObservedObject var store: Store
-    @AppStorage("nook_appearance") private var appearance: String = "system"
+    @AppStorage("nook_appearance") private var appearance: String = "light"
     @State private var copiedCli = false
     @Environment(\.colorScheme) private var colorScheme
 
@@ -31,7 +31,7 @@ struct SettingsPopoverView: View {
                     } label: {
                         Text(label)
                             .font(.system(size: 11, weight: appearance == value ? .semibold : .regular))
-                            .foregroundStyle(appearance == value ? .white : .primary)
+                            .foregroundStyle(appearance == value ? NookTheme.tagOnFg(colorScheme) : .primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 6)
                             .background(
@@ -84,16 +84,18 @@ struct SettingsPopoverView: View {
                 .padding(.top, 4)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("在终端中操作待办：复制下方一键安装命令到 Terminal 执行即可。")
+                Text("装好后 Claude 等 AI 助手就能帮你记待办。把下面命令贴到 Terminal 跑一次即可。")
                     .font(.nook(size: 11))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text(#"nooktodo "买牛奶" -t 购物 -p high"#)
-                    .font(.system(size: 10.5, design: .monospaced))
+                Text(installCommandPreview)
+                    .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(.primary)
+                    .lineLimit(nil)
+                    .multilineTextAlignment(.leading)
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
+                    .padding(.vertical, 6)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: 6)
@@ -108,7 +110,7 @@ struct SettingsPopoverView: View {
                         Text(copiedCli ? "已复制到剪贴板" : "一键复制安装命令")
                             .font(.nook(size: 11, weight: .medium))
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(NookTheme.tagOnFg(colorScheme))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 7)
                     .background(
@@ -128,19 +130,47 @@ struct SettingsPopoverView: View {
         }
     }
 
-    private func copyInstallCommand() {
-        // Use the bundled script's actual on-disk path so the install works regardless
-        // of where the user dragged Nook.app to.
-        let scriptPath = Bundle.main.url(forResource: "nooktodo", withExtension: nil)?.path
-            ?? "/Applications/Nook.app/Contents/Resources/nooktodo"
-        let cmd = """
-        mkdir -p ~/.local/bin && \
-        cp "\(scriptPath)" ~/.local/bin/nooktodo && \
-        chmod +x ~/.local/bin/nooktodo && \
-        echo '✓ 已安装到 ~/.local/bin/nooktodo' && \
-        echo '如果命令找不到，请把 ~/.local/bin 加入 PATH:' && \
-        echo "  echo 'export PATH=\\"\\$HOME/.local/bin:\\$PATH\\"' >> ~/.zshrc"
+    /// Display preview — short version of the actual command for visual hint.
+    private var installCommandPreview: String {
         """
+        # 自动找 Nook.app + 选 PATH 里的目录安装
+        # 必要时还会把 ~/.local/bin 写进 .zshrc
+        bash -c "$(...auto-install script...)"
+        """
+    }
+
+    /// Full clipboard command — robust auto-install that:
+    ///   1. Finds Nook.app via Spotlight-free `find`
+    ///   2. Picks an install dir that's already in PATH (homebrew / /usr/local/bin)
+    ///   3. Falls back to ~/.local/bin AND auto-appends export PATH to .zshrc
+    /// So AI agents can run it once and `nooktodo` is immediately available.
+    private func copyInstallCommand() {
+        let cmd = #"""
+        NOOK=$(find /Applications ~/Applications -name Nook.app -maxdepth 2 2>/dev/null | head -1)
+        if [ -z "$NOOK" ]; then echo "✗ 找不到 Nook.app — 请先把它拖到 /Applications"; exit 1; fi
+        SCRIPT="$NOOK/Contents/Resources/nooktodo"
+        # 1. 优先找 PATH 里已存在且可写的目录
+        TARGET=""
+        for d in /opt/homebrew/bin /usr/local/bin; do
+          if echo ":$PATH:" | grep -q ":$d:" && [ -w "$d" ] 2>/dev/null; then
+            TARGET="$d"; break
+          fi
+        done
+        # 2. 如果 PATH 里没现成可写目录，用 ~/.local/bin 并自动加进 .zshrc
+        if [ -z "$TARGET" ]; then
+          TARGET="$HOME/.local/bin"
+          mkdir -p "$TARGET"
+          RC="$HOME/.zshrc"; [ -n "$BASH_VERSION" ] && RC="$HOME/.bashrc"
+          if ! echo ":$PATH:" | grep -q ":$TARGET:"; then
+            { echo ""; echo "# Added by Nook"; echo "export PATH=\"\$HOME/.local/bin:\$PATH\""; } >> "$RC"
+            echo "✓ 已把 ~/.local/bin 加入 PATH（写入 $RC，新开 Terminal 即可生效）"
+          fi
+        fi
+        ln -sf "$SCRIPT" "$TARGET/nooktodo"
+        export PATH="$TARGET:$PATH"
+        echo "✓ nooktodo 已安装到 $TARGET/nooktodo"
+        echo "✓ 当前 shell 立即可用：nooktodo 'test'"
+        """#
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.setString(cmd, forType: .string)

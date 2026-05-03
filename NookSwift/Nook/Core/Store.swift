@@ -35,6 +35,12 @@ final class Store: ObservableObject {
     private var nextSnippetId: Int = 1
     private let filePath: URL
 
+    // External-write watcher state
+    private var fileMonitor: DispatchSourceFileSystemObject?
+    private var watchedFD: Int32 = -1
+    /// Suppress reload reactions to our own writes — extend on each save().
+    private var ignoreReloadUntil: Date = .distantPast
+
     static let tagColors: [String] = [
         "#FF6B6B", "#FF8A65", "#FFB74D", "#FFD54F", "#FFF176",
         "#DCE775", "#AED581", "#81C784", "#4DB6AC", "#4DD0E1",
@@ -47,6 +53,104 @@ final class Store: ObservableObject {
         let dataDir = appSupport.appendingPathComponent("Nook/data")
         try? FileManager.default.createDirectory(at: dataDir, withIntermediateDirectories: true)
         filePath = dataDir.appendingPathComponent("tasks.json")
+        let isFirstRun = !FileManager.default.fileExists(atPath: filePath.path)
+        load()
+        if isFirstRun {
+            seedWelcomeTask()
+        }
+        startWatching()
+    }
+
+    /// First-run welcome task + starter snippets — the snippets section at the bottom
+    /// holds the actual install command and AI prompts (one-click copy), so the
+    /// welcome task can stay short and explain the WHAT, not the HOW.
+    private func seedWelcomeTask() {
+        let welcomeDesc = """
+        让你的 AI agent（Claude / Cursor 等）直接帮你写待办 —— 你不用切回这个面板手动输入。
+
+        ✨ 怎么用
+        让 AI 装一次 nooktodo CLI（命令在底部「快捷粘贴」里），之后对 AI 说「帮我记一下 X」，它就会自动把任务写进 Nook，面板实时同步。
+
+        📝 例如
+        你：「帮我记一下明天要买牛奶，高优先级」
+        AI 会跑：nooktodo "买牛奶" -p high -d tomorrow
+        ↓
+        这条任务立即出现在面板里 ✓
+
+        装完跟着子任务一项项划掉，最后删掉这条 👋
+        """
+        let task = NookTask(
+            id: 1,
+            title: "👋 让 AI 帮你记待办",
+            description: welcomeDesc,
+            completed: false,
+            priority: .none,
+            tags: [],
+            subtasks: [
+                Subtask(id: 1, title: "从底部「快捷粘贴」复制【安装 nooktodo】命令", completed: false),
+                Subtask(id: 2, title: "让 AI agent 帮你执行刚复制的命令", completed: false),
+                Subtask(id: 3, title: "对 AI 说「帮我记一下 XX」，看 Nook 是否自动出现", completed: false),
+            ],
+            nextSubId: 4,
+            dueDate: nil,
+            listId: "inbox",
+            createdAt: ISO8601DateFormatter().string(from: Date()),
+            completedAt: nil
+        )
+        tasks = [task]
+        nextId = 2
+
+        // Starter snippets — give users one-click access to install + AI prompts
+        let installCmd = #"NOOK=$(find /Applications ~/Applications -name Nook.app -maxdepth 2 2>/dev/null | head -1) && mkdir -p ~/.local/bin && ln -sf "$NOOK/Contents/Resources/nooktodo" ~/.local/bin/nooktodo && echo "✓ nooktodo 已安装"#
+        let now = ISO8601DateFormatter().string(from: Date())
+        snippets = [
+            Snippet(id: 1, label: "📦 安装 nooktodo（让 AI 跑这条）",
+                    value: installCmd, type: "command", createdAt: now),
+            Snippet(id: 2, label: "💡 给 AI 的提示模板",
+                    value: "帮我记一下 X，X 优先级，明天要做",
+                    type: "text", createdAt: now),
+            Snippet(id: 3, label: "📝 nooktodo 命令格式",
+                    value: #"nooktodo "标题" -t 标签 -p high -d tomorrow"#,
+                    type: "command", createdAt: now),
+        ]
+        nextSnippetId = 4
+
+        save()
+    }
+
+    deinit {
+        fileMonitor?.cancel()
+        if watchedFD >= 0 { close(watchedFD) }
+    }
+
+    /// Watch the data directory for changes — atomic writes swap inodes, so watching
+    /// the file directly would lose the descriptor on every save. The directory
+    /// vnode is stable across the rename. Reload whenever any change fires.
+    private func startWatching() {
+        let dir = filePath.deletingLastPathComponent()
+        watchedFD = open(dir.path, O_EVTONLY)
+        guard watchedFD >= 0 else { return }
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: watchedFD,
+            eventMask: [.write, .extend, .rename, .delete],
+            queue: .main
+        )
+        source.setEventHandler { [weak self] in
+            self?.reloadIfExternalChange()
+        }
+        source.setCancelHandler { [weak self] in
+            if let fd = self?.watchedFD, fd >= 0 {
+                close(fd)
+                self?.watchedFD = -1
+            }
+        }
+        source.resume()
+        fileMonitor = source
+    }
+
+    private func reloadIfExternalChange() {
+        // Skip reactions to our own recent saves.
+        guard Date() > ignoreReloadUntil else { return }
         load()
     }
 
@@ -72,6 +176,9 @@ final class Store: ObservableObject {
             tags: tags, snippets: snippets,
             nextSnippetId: nextSnippetId, settings: settings
         )
+        // Suppress reload reactions to our own write — atomic write fires multiple
+        // dir events (temp create, rename, delete temp).
+        ignoreReloadUntil = Date().addingTimeInterval(0.6)
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

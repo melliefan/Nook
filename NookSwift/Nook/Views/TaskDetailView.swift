@@ -293,7 +293,7 @@ struct TaskDetailView: View {
                             .fill(NookTheme.accent(colorScheme))
                             .frame(width: 14, height: 14)
                         NookIcon(.checkmark, size: 7)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(NookTheme.tagOnFg(colorScheme))
                     }
                 }
             }
@@ -502,7 +502,10 @@ private struct CompactCalendarPicker: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         selectedDueDate = formatter.string(from: date)
-        isPresented = false
+        // Brief delay so user sees the selection highlight before popover dismisses
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+            isPresented = false
+        }
     }
 
     private func parse(_ value: String) -> Date? {
@@ -531,7 +534,10 @@ private struct CompactPriorityPicker: View {
             ForEach(NookTask.Priority.allCases, id: \.self) { priority in
                 Button {
                     selectedPriority = priority
-                    isPresented = false
+                    // Brief delay so the selected flag's highlight is visible before close
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+                        isPresented = false
+                    }
                 } label: {
                     NookIcon(.flag, size: 13)
                         .foregroundStyle(Color(hex: priority.color).opacity(priority == selectedPriority ? 1 : 0.55))
@@ -558,6 +564,7 @@ private struct TagSelectorOverlay: View {
     @State private var pendingColor: String?
     @State private var showColorPicker = false
     @State private var editingColorTag: String?
+    @State private var hoveredRowTag: String?
 
     /// 8-color picker palette — first 8 of Store.tagColors, distinct enough at a glance.
     private static let pickerColors: [String] = [
@@ -673,7 +680,7 @@ private struct TagSelectorOverlay: View {
                 } label: {
                     Text("完成")
                         .font(.nook(size: 12, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(NookTheme.tagOnFg(colorScheme))
                         .padding(.horizontal, 14)
                         .frame(height: 28)
                         .background(NookTheme.accent(colorScheme), in: RoundedRectangle(cornerRadius: 7))
@@ -715,9 +722,7 @@ private struct TagSelectorOverlay: View {
                     } label: {
                         Circle()
                             .fill(Color(hex: effectiveCreateColor))
-                            .frame(width: 8, height: 8)
-                            .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
-                            .overlay(Circle().stroke(Color(hex: effectiveCreateColor).opacity(0.4), lineWidth: 1).padding(-1.5))
+                            .frame(width: 10, height: 10)
                     }
                     .buttonStyle(.plain)
                     .help("点击换色")
@@ -767,8 +772,6 @@ private struct TagSelectorOverlay: View {
                     Circle()
                         .fill(Color(hex: color))
                         .frame(width: 11, height: 11)
-                        .overlay(Circle().stroke(.white, lineWidth: 1.5))
-                        .overlay(Circle().stroke(Color(hex: color).opacity(0.4), lineWidth: 1).padding(-1.5))
                         .frame(width: 18, height: 18)
                         .contentShape(Rectangle())
                 }
@@ -782,12 +785,28 @@ private struct TagSelectorOverlay: View {
                         .foregroundStyle(NookTheme.t1(colorScheme))
                         .lineLimit(1)
                     Spacer()
+                    // 18pt 固定槽：count + × 用 ZStack 共占同一空间，opacity 切换
                     let count = store.tasks.filter { $0.tags.contains(tag) }.count
-                    if count > 0 {
-                        Text("\(count)")
+                    ZStack(alignment: .trailing) {
+                        Text(count > 0 ? "\(count)" : "")
                             .font(.nook(size: 10, weight: .medium))
                             .foregroundStyle(NookTheme.t4(colorScheme))
+                            .opacity(hoveredRowTag == tag && !isEditing ? 0 : 1)
+                        Button {
+                            hoveredRowTag = nil
+                            store.deleteTag(tag)
+                            selectedTags.removeAll { $0 == tag }
+                        } label: {
+                            NookIcon(.x, size: 9)
+                                .foregroundStyle(NookTheme.t3(colorScheme))
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .opacity(hoveredRowTag == tag && !isEditing ? 1 : 0)
+                        .allowsHitTesting(hoveredRowTag == tag && !isEditing)
+                        .help("删除标签")
                     }
+                    .frame(width: 18, alignment: .trailing)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -798,7 +817,7 @@ private struct TagSelectorOverlay: View {
                     }
                 }
 
-                // Right-side affordance: delete (when editing) OR subtle ✓ (when selected)
+                // Right-side affordance: delete (when editing) OR filled-circle ✓ (selected)
                 if isEditing {
                     Button {
                         store.deleteTag(tag)
@@ -813,15 +832,23 @@ private struct TagSelectorOverlay: View {
                     .buttonStyle(.plain)
                     .help("删除标签")
                 } else if isSelected {
-                    NookIcon(.checkmark, size: 10)
-                        .foregroundStyle(NookTheme.t2(colorScheme))
-                        .frame(width: 14, height: 14)
+                    Circle()
+                        .fill(NookTheme.accent(colorScheme))
+                        .frame(width: 13, height: 13)
+                        .overlay(
+                            NookIcon(.checkmark, size: 7)
+                                .foregroundStyle(NookTheme.tagOnFg(colorScheme))
+                        )
                 } else {
-                    Color.clear.frame(width: 14, height: 14)
+                    Color.clear.frame(width: 13, height: 13)
                 }
             }
             .padding(.horizontal, 10)
             .frame(height: 30)
+            .onHover { hovering in
+                if hovering { hoveredRowTag = tag }
+                else if hoveredRowTag == tag { hoveredRowTag = nil }
+            }
 
             if isEditing {
                 HStack(spacing: 6) {

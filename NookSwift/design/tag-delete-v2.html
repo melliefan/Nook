@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Tag 删除交互方案</title>
+<style>
+  :root {
+    --bg: #FCFCFD;
+    --bg2: #F1F1F4;
+    --bg-hover: #E8E8ED;
+    --t1: #1E1E2A;
+    --t2: #5C5C6E;
+    --t3: #8A8A96;
+    --t4: #BBBBC2;
+    --line: #DDDDE2;
+    --accent: #3A3A48;
+    --accent-bg: rgba(58,58,72,0.08);
+    --red: #EB4D3D;
+    --red-bg: rgba(235,77,61,0.10);
+    --shadow: 0 6px 18px rgba(30,30,42,0.08);
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--sans); }
+  body {
+    background: #E5E5EA;
+    padding: 30px 50px;
+    color: var(--t1);
+  }
+  h2 { font-size: 14px; font-weight: 600; color: var(--t1); margin: 30px 0 8px; }
+  .desc { font-size: 11px; color: var(--t3); margin-bottom: 14px; line-height: 1.6; }
+  .panel {
+    background: var(--bg);
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--line);
+    margin-bottom: 8px;
+  }
+  .row-label { font-size: 10px; color: var(--t3); margin-right: 12px; min-width: 90px; display: inline-block; }
+  .demo-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--bg2); }
+  .demo-row:last-child { border-bottom: none; }
+
+  /* ==== Chip styles ==== */
+  .chip {
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: var(--bg2);
+    color: var(--t2);
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: default;
+    position: relative;
+    transition: padding 0.12s, background 0.12s;
+  }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .chip .count { font-size: 10px; opacity: .55; margin-left: 2px; }
+  .chip.active { background: var(--accent); color: white; }
+  .chip.active .count { color: white; }
+  .chips-bar { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+
+  /* ==== Selector row styles ==== */
+  .sel-row {
+    display: flex; align-items: center; gap: 8px;
+    height: 30px; padding: 0 10px; border-radius: 7px;
+  }
+  .sel-row:hover { background: rgba(0,0,0,0.02); }
+  .sel-row .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .sel-row .name { flex: 1; font-size: 12px; font-weight: 500; color: var(--t1); }
+  .sel-row .count { font-size: 10px; font-weight: 500; color: var(--t4); width: 18px; text-align: right; }
+  .sel-row .check {
+    width: 13px; height: 13px; border-radius: 50%; background: var(--accent);
+    display: grid; place-items: center; color: white; font-size: 7px; font-weight: 600;
+  }
+  .sel-row .check-empty { width: 13px; height: 13px; }
+
+  /* ==== Variants ==== */
+
+  /* A: 当前实现 - 红色浮 badge */
+  .v-a-badge {
+    position: absolute; top: -5px; right: -5px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: rgba(235,77,61,0.85); color: white;
+    display: grid; place-items: center;
+    font-size: 9px; cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  /* B: 内嵌 - 整个 chip 滑出 ×（chip 加宽） */
+  .v-b-chip:hover { padding-right: 4px; }
+  .v-b-chip .x-inline {
+    width: 0; opacity: 0; overflow: hidden;
+    transition: width 0.14s, opacity 0.14s;
+    color: var(--t3);
+    font-size: 11px; font-weight: 600;
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .v-b-chip:hover .x-inline { width: 14px; opacity: 1; padding-left: 2px; }
+  .v-b-chip:hover .x-inline:hover { color: var(--red); }
+
+  /* C: 替换 - hover 时 count 数字变成 × */
+  .v-c-chip .count, .v-c-chip .x-replace { transition: opacity 0.12s; }
+  .v-c-chip .x-replace {
+    position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+    color: var(--t3); font-size: 11px; font-weight: 600;
+    opacity: 0; cursor: pointer;
+  }
+  .v-c-chip:hover .count { opacity: 0; }
+  .v-c-chip:hover .x-replace { opacity: 1; }
+  .v-c-chip:hover .x-replace:hover { color: var(--red); }
+
+  /* D: 右键菜单提示 - chip 加细虚线右键提示 hint */
+  .v-d-chip { position: relative; }
+  .v-d-chip::after {
+    content: ""; position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 3px; border-radius: 50%; background: var(--t4); opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .v-d-chip:hover::after { opacity: 0.5; }
+  .v-d-tooltip {
+    position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: white;
+    font-size: 10px; padding: 4px 8px; border-radius: 5px;
+    white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: opacity 0.12s 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .v-d-chip:hover .v-d-tooltip { opacity: 1; }
+
+  /* === Selector row variants === */
+
+  /* RA: hover 行末替换 ✓ 占位为 × */
+  .ra-row .x-end { width: 13px; height: 13px; display: grid; place-items: center;
+    color: var(--t4); font-size: 11px; opacity: 0; cursor: pointer; }
+  .ra-row:hover .x-end { opacity: 1; }
+  .ra-row:hover .x-end:hover { color: var(--red); }
+
+  /* RB: hover 整行右滑出 trash 图标 */
+  .rb-row { position: relative; overflow: hidden; }
+  .rb-trash {
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: 0; background: var(--red); color: white;
+    display: grid; place-items: center; font-size: 11px;
+    transition: width 0.16s; cursor: pointer;
+    border-radius: 0 7px 7px 0;
+  }
+  .rb-row:hover .rb-trash { width: 36px; }
+
+  .badge-num {
+    display: inline-block; min-width: 18px; padding: 0 5px; height: 16px;
+    background: var(--bg2); color: var(--t3); font-size: 9px; font-weight: 600;
+    border-radius: 8px; text-align: center; line-height: 16px; margin-left: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h2>方案 A · 红圆 ×（当前实现）<span class="badge-num">用户觉得奇怪</span></h2>
+<div class="desc">
+  红色浮 badge 在 chip 右上角伸出。问题：颜色太刺眼像通知 / 警告，不像可点的删除按钮；浮位破坏 chip 的"完整感"。
+</div>
+<div class="panel">
+  <div class="demo-row">
+    <span class="row-label">悬停 "工作"</span>
+    <div class="chips-bar">
+      <span class="chip active">all</span>
+      <span class="chip">
+        <span class="dot" style="background:#4FC3F7"></span> 工作 <span class="count">3</span>
+        <span class="v-a-badge">✕</span>
+      </span>
+      <span class="chip">
+        <span class="dot" style="background:#BA68C8"></span> UPclaw <span class="count">3</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+
+<h2>方案 B · 内嵌滑出 × <span class="badge-num">推荐</span></h2>
+<div class="desc">
+  hover 时 chip 整体加宽，× 从右侧"长出来"，跟 chip 一体。颜色用 t3 中性灰，悬停 × 本身才变红。视觉上不破坏 chip。
+</div>
+<div class="panel">
+  <div class="demo-row">
+    <span class="row-label">悬停 "UPclaw"</span>
+    <div class="chips-bar">
+      <span class="chip active">all</span>
+      <span class="chip">
+        <span class="dot" style="background:#4FC3F7"></span> 工作 <span class="count">3</span>
+      </span>
+      <span class="chip v-b-chip">
+        <span class="dot" style="background:#BA68C8"></span> UPclaw <span class="count">3</span>
+        <span class="x-inline">×</span>
+      </span>
+      <span class="chip">
+        <span class="dot" style="background:#FFB74D"></span> backend <span class="count">2</span>
+      </span>
+    </div>
+    <span class="badge-num" style="margin-left:14px;">悬停 chip → × 滑出</span>
+  </div>
+</div>
+
+
+<h2>方案 C · 替换 count → × <span class="badge-num">最简洁</span></h2>
+<div class="desc">
+  hover 时数字 count 直接变成 ×。利用同一空间，不加宽，无新元素。但失去"看任务数"的能力（只在悬停瞬间）。
+</div>
+<div class="panel">
+  <div class="demo-row">
+    <span class="row-label">悬停 "工作"</span>
+    <div class="chips-bar">
+      <span class="chip active">all</span>
+      <span class="chip v-c-chip">
+        <span class="dot" style="background:#4FC3F7"></span> 工作 <span class="count">3</span>
+        <span class="x-replace">×</span>
+      </span>
+      <span class="chip">
+        <span class="dot" style="background:#BA68C8"></span> UPclaw <span class="count">3</span>
+      </span>
+    </div>
+    <span class="badge-num" style="margin-left:14px;">悬停 → 数字变 ×</span>
+  </div>
+</div>
+
+
+<h2>方案 D · 仅右键 + tooltip 提示</h2>
+<div class="desc">
+  chip 完全保持原样，hover 时仅显示一个气泡 tooltip 提示用户"右键删除"。最克制但依赖右键。
+</div>
+<div class="panel">
+  <div class="demo-row">
+    <span class="row-label">悬停 "工作"</span>
+    <div class="chips-bar">
+      <span class="chip v-d-chip">
+        <span class="dot" style="background:#4FC3F7"></span> 工作 <span class="count">3</span>
+        <span class="v-d-tooltip">右键删除</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+
+<h2>选择页 tag 行 · 方案 RA · 行内 × <span class="badge-num">配 B 或 C 用</span></h2>
+<div class="desc">
+  hover 行时，最右边出现一个灰色 ×（替代 ✓ 占位空间）。点击时变红高亮 → 删除。
+</div>
+<div class="panel" style="width: 320px;">
+  <div class="sel-row ra-row">
+    <span class="dot" style="background:#4FC3F7"></span>
+    <span class="name">工作</span>
+    <span class="count">3</span>
+    <span class="x-end">×</span>
+  </div>
+  <div class="sel-row ra-row">
+    <span class="dot" style="background:#BA68C8"></span>
+    <span class="name">UPclaw</span>
+    <span class="count">3</span>
+    <div class="check">✓</div>
+  </div>
+  <div class="sel-row ra-row">
+    <span class="dot" style="background:#FFB74D"></span>
+    <span class="name">backend</span>
+    <span class="count">2</span>
+    <span class="x-end">×</span>
+  </div>
+</div>
+
+
+<h2>选择页 tag 行 · 方案 RB · iOS 风格右滑显删除</h2>
+<div class="desc">
+  hover 整行 → 行右侧滑出红色 trash 区。点击触发删除。视觉上像"侧滑删除"的桌面版。
+</div>
+<div class="panel" style="width: 320px;">
+  <div class="sel-row rb-row">
+    <span class="dot" style="background:#4FC3F7"></span>
+    <span class="name">工作</span>
+    <span class="count">3</span>
+    <div class="check">✓</div>
+    <div class="rb-trash">🗑</div>
+  </div>
+  <div class="sel-row rb-row">
+    <span class="dot" style="background:#BA68C8"></span>
+    <span class="name">UPclaw</span>
+    <span class="count">3</span>
+    <span class="check-empty"></span>
+    <div class="rb-trash">🗑</div>
+  </div>
+  <div class="sel-row rb-row">
+    <span class="dot" style="background:#FFB74D"></span>
+    <span class="name">backend</span>
+    <span class="count">2</span>
+    <span class="check-empty"></span>
+    <div class="rb-trash">🗑</div>
+  </div>
+</div>
+
+
+<h2>我的推荐</h2>
+<div class="desc" style="font-size: 12px; color: var(--t1);">
+  <strong>首页 → 方案 B（内嵌滑出 ×）</strong>：自然、不刺眼、不破坏布局<br>
+  <strong>选择页 → 方案 RA（行内 ×）</strong>：跟 B 风格统一，hover 一致<br>
+  右键 contextMenu 仍保留作为备选路径
+</div>
+
+</body>
+</html>
+</parameter>
+</invoke>

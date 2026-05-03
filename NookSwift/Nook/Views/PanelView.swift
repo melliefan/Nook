@@ -25,8 +25,21 @@ struct PanelView: View {
     @State private var editorMode: EditorMode?
     @State private var showSettings = false
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("nook_appearance") private var appearance: String = "light"
 
     private var corner: NookSettings.CornerTrigger { store.settings.cornerTrigger }
+
+    /// SwiftUI-native color scheme override.
+    /// nil = follow system (when appearance == "system"), otherwise force.
+    /// This ensures the panel re-renders correctly without relying on
+    /// NSApp.appearance propagation through NSPanel/NSHostingView.
+    private var forcedColorScheme: ColorScheme? {
+        switch appearance {
+        case "light": return .light
+        case "dark":  return .dark
+        default:      return nil   // follow system
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -65,6 +78,7 @@ struct PanelView: View {
             x: 0,
             y: 12
         )
+        .preferredColorScheme(forcedColorScheme)
     }
 
     private func openEditor(_ mode: EditorMode) {

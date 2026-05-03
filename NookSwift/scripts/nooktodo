@@ -29,6 +29,8 @@ Exit codes: 0 ok, 1 user error, 2 store missing.
 """
 
 import argparse
+import contextlib
+import fcntl
 import json
 import os
 import re
@@ -92,41 +94,32 @@ def save_store(data):
     tmp.replace(STORE)
 
 
-def nook_pid():
+@contextlib.contextmanager
+def store_lock():
+    """Serialize concurrent nooktodo invocations. Without this, two processes can
+    both load_store() (read same nextId), then save_store() (last writer wins,
+    other task lost). fcntl.flock on a sidecar file is process-wide and works
+    across terminals / users."""
+    STORE.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = STORE.parent / ".tasks.lock"
+    fd = os.open(str(lock_path), os.O_RDWR | os.O_CREAT, 0o644)
     try:
-        out = subprocess.run(
-            ["pgrep", "-f", f"{APP_NAME}.app"],
-            capture_output=True, text=True, check=False,
-        ).stdout.strip()
-        return [int(x) for x in out.split() if x.isdigit()]
-    except FileNotFoundError:
-        return []
-
-
-def restart_nook_if_needed(was_running):
-    if not was_running:
-        return
-    for hint in APP_PATH_HINTS:
-        if Path(hint).exists():
-            subprocess.run(["open", hint], check=False)
-            return
-    # last resort: launch by bundle id (won't work since no id registered)
-    subprocess.run(["open", "-a", APP_NAME], check=False)
-
-
-def with_pause(fn):
-    """Pkill Nook around fn() so its in-memory state can't overwrite our edit."""
-    pids = nook_pid()
-    was_running = bool(pids)
-    if was_running:
-        subprocess.run(["pkill", "-f", f"{APP_NAME}.app"], check=False)
-        # tiny wait for the file lock to release
-        import time
-        time.sleep(0.2)
-    try:
-        fn()
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
     finally:
-        restart_nook_if_needed(was_running)
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+
+
+@contextlib.contextmanager
+def locked_rmw():
+    """Lock-protected read-modify-write. Two processes can otherwise both
+    load_store() with the same nextId, both increment, and the second save
+    clobbers the first. The lock spans the entire load → mutate → save flow."""
+    with store_lock():
+        data = load_store()
+        yield data
+        save_store(data)
 
 
 def _expand_tags(raw):
@@ -143,48 +136,47 @@ def _expand_tags(raw):
 
 
 def cmd_add(args):
-    data = load_store()
-    next_id = int(data.get("nextId", 1))
     title = args.title.strip()
     if not title:
         die("title cannot be empty")
 
-    # auto-register unknown tags with deterministic colors
     palette = [
         "#FF6B6B", "#FF8A65", "#FFB74D", "#FFD54F",
         "#81C784", "#4FC3F7", "#7986CB", "#BA68C8",
     ]
-    tags = _expand_tags(args.tags)
-    tags_dict = data.setdefault("tags", {})
-    for tag in tags:
-        if tag not in tags_dict:
-            color = palette[len(tags_dict) % len(palette)]
-            tags_dict[tag] = {"color": color}
 
-    sub_titles = [s.strip() for s in (args.subs or []) if s and s.strip()]
-    subtasks = [
-        {"id": i + 1, "title": t, "completed": False}
-        for i, t in enumerate(sub_titles)
-    ]
+    with locked_rmw() as data:
+        next_id = int(data.get("nextId", 1))
 
-    task = {
-        "id": next_id,
-        "title": title,
-        "description": args.desc or "",
-        "completed": False,
-        "priority": args.priority or "none",
-        "tags": tags,
-        "subtasks": subtasks,
-        "nextSubId": len(subtasks) + 1,
-        "dueDate": parse_due(args.due) if args.due else None,
-        "listId": "inbox",
-        "createdAt": now_iso(),
-        "completedAt": None,
-    }
-    data.setdefault("tasks", []).append(task)
-    data["nextId"] = next_id + 1
+        tags = _expand_tags(args.tags)
+        tags_dict = data.setdefault("tags", {})
+        for tag in tags:
+            if tag not in tags_dict:
+                color = palette[len(tags_dict) % len(palette)]
+                tags_dict[tag] = {"color": color}
 
-    with_pause(lambda: save_store(data))
+        sub_titles = [s.strip() for s in (args.subs or []) if s and s.strip()]
+        subtasks = [
+            {"id": i + 1, "title": t, "completed": False}
+            for i, t in enumerate(sub_titles)
+        ]
+
+        task = {
+            "id": next_id,
+            "title": title,
+            "description": args.desc or "",
+            "completed": False,
+            "priority": args.priority or "none",
+            "tags": tags,
+            "subtasks": subtasks,
+            "nextSubId": len(subtasks) + 1,
+            "dueDate": parse_due(args.due) if args.due else None,
+            "listId": "inbox",
+            "createdAt": now_iso(),
+            "completedAt": None,
+        }
+        data.setdefault("tasks", []).append(task)
+        data["nextId"] = next_id + 1
 
     print(f"added #{next_id}: {title}")
     parts = []
@@ -234,30 +226,32 @@ def cmd_ls(args):
 
 
 def cmd_done(args):
-    data = load_store()
-    tasks = data.get("tasks", [])
-    for t in tasks:
-        if t["id"] == args.id:
-            if t.get("completed"):
-                die(f"#{args.id} already done")
-            t["completed"] = True
-            t["completedAt"] = now_iso()
-            with_pause(lambda: save_store(data))
-            print(f"done #{args.id}: {t['title']}")
-            return
-    die(f"id {args.id} not found")
+    title_for_log = None
+    with locked_rmw() as data:
+        for t in data.get("tasks", []):
+            if t["id"] == args.id:
+                if t.get("completed"):
+                    die(f"#{args.id} already done")
+                t["completed"] = True
+                t["completedAt"] = now_iso()
+                title_for_log = t["title"]
+                break
+        else:
+            die(f"id {args.id} not found")
+    print(f"done #{args.id}: {title_for_log}")
 
 
 def cmd_rm(args):
-    data = load_store()
-    tasks = data.get("tasks", [])
-    for i, t in enumerate(tasks):
-        if t["id"] == args.id:
-            removed = tasks.pop(i)
-            with_pause(lambda: save_store(data))
-            print(f"removed #{args.id}: {removed['title']}")
-            return
-    die(f"id {args.id} not found")
+    title_for_log = None
+    with locked_rmw() as data:
+        tasks = data.get("tasks", [])
+        for i, t in enumerate(tasks):
+            if t["id"] == args.id:
+                title_for_log = tasks.pop(i)["title"]
+                break
+        else:
+            die(f"id {args.id} not found")
+    print(f"removed #{args.id}: {title_for_log}")
 
 
 def cmd_tags(_args):

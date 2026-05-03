@@ -119,7 +119,7 @@ struct SnippetsSectionView: View {
                     NookIcon(.copy, size: 10)
                         .foregroundStyle(NookTheme.t4(colorScheme))
                         .frame(width: 20, height: 20)
-                        .background(buttonHoverBg, in: RoundedRectangle(cornerRadius: 4))
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 Button {
@@ -130,9 +130,21 @@ struct SnippetsSectionView: View {
                     NookIcon(.pen, size: 10)
                         .foregroundStyle(NookTheme.t4(colorScheme))
                         .frame(width: 20, height: 20)
-                        .background(buttonHoverBg, in: RoundedRectangle(cornerRadius: 4))
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                Button {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        store.deleteSnippet(snippet.id)
+                    }
+                } label: {
+                    NookIcon(.trash, size: 10)
+                        .foregroundStyle(.red.opacity(0.7))
+                        .frame(width: 20, height: 20)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("删除")
             }
             .opacity(isHovered ? 1 : 0)
             .allowsHitTesting(isHovered)
@@ -165,10 +177,10 @@ struct SnippetsSectionView: View {
                     .buttonStyle(.plain)
                 Button("保存") { saveSnippet() }
                     .font(.nook(size: 11, weight: .medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(NookTheme.tagOnFg(colorScheme))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 3)
-                    .background(.blue, in: RoundedRectangle(cornerRadius: 5))
+                    .background(NookTheme.accent(colorScheme), in: RoundedRectangle(cornerRadius: 5))
                     .buttonStyle(.plain)
             }
         }

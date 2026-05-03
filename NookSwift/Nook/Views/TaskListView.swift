@@ -7,6 +7,7 @@ struct TaskListView: View {
     @AppStorage("nook_filterTag") private var filterTag: String = ""
     @State private var completedCollapsed = true
     @State private var draggingTaskId: Int?
+    @State private var dropTargetTaskId: Int?
     @Environment(\.colorScheme) private var colorScheme
 
     private var activeTasks: [NookTask] {
@@ -30,43 +31,59 @@ struct TaskListView: View {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(activeTasks) { task in
-                    TaskRowView(
-                        task: task,
-                        store: store,
-                        onDetail: onDetail,
-                        isReorderEnabled: canReorder,
-                        draggingTaskId: $draggingTaskId
-                    )
-                    .onDrop(of: ["public.text"], isTargeted: nil) { _ in
-                        guard canReorder,
-                              let sourceId = draggingTaskId,
-                              sourceId != task.id,
-                              let targetIndex = store.tasks.firstIndex(where: { $0.id == task.id }) else {
+        // When there's nothing at all, show a centered empty state instead of
+        // a top-anchored ScrollView item — fills available height and centers.
+        if activeTasks.isEmpty && completedTasks.isEmpty {
+            emptyState
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(activeTasks) { task in
+                        TaskRowView(
+                            task: task,
+                            store: store,
+                            onDetail: onDetail,
+                            isReorderEnabled: canReorder,
+                            draggingTaskId: $draggingTaskId,
+                            isDropTarget: dropTargetTaskId == task.id && draggingTaskId != task.id
+                        )
+                        .onDrop(of: ["public.text"], isTargeted: Binding(
+                            get: { dropTargetTaskId == task.id },
+                            set: { hovered in
+                                if hovered {
+                                    dropTargetTaskId = task.id
+                                } else if dropTargetTaskId == task.id {
+                                    dropTargetTaskId = nil
+                                }
+                            }
+                        )) { _ in
+                            guard canReorder,
+                                  let sourceId = draggingTaskId,
+                                  sourceId != task.id,
+                                  let targetIndex = store.tasks.firstIndex(where: { $0.id == task.id }) else {
+                                draggingTaskId = nil
+                                dropTargetTaskId = nil
+                                return false
+                            }
+                            withAnimation(.easeInOut(duration: 0.18)) {
+                                store.reorderTask(sourceId, to: targetIndex)
+                            }
                             draggingTaskId = nil
-                            return false
+                            dropTargetTaskId = nil
+                            return true
                         }
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            store.reorderTask(sourceId, to: targetIndex)
-                        }
-                        draggingTaskId = nil
-                        return true
+                    }
+
+                    if !completedTasks.isEmpty {
+                        completedSection
                     }
                 }
-
-                if !completedTasks.isEmpty {
-                    completedSection
-                }
-
-                if activeTasks.isEmpty && completedTasks.isEmpty {
-                    emptyState
-                }
+                .padding(.vertical, 2)
             }
-            .padding(.vertical, 2)
+            .scrollIndicators(.never)
+            .frame(maxHeight: .infinity)
         }
-        .frame(maxHeight: .infinity)
     }
 
     private var completedSection: some View {
@@ -116,18 +133,27 @@ struct TaskListView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            NookIcon(.check, size: 40)
-                .foregroundStyle(.quaternary)
-            Text("暂无待办")
-                .font(.nook(size: 14, weight: .medium))
-                .foregroundStyle(NookTheme.t3(colorScheme))
-            Text("添加一个待办，轻轻记下")
-                .font(.nook(size: 12))
-                .foregroundStyle(NookTheme.t4(colorScheme))
+        VStack(spacing: 16) {
+            if let url = Bundle.main.url(forResource: "empty-state", withExtension: "png"),
+               let nsImage = NSImage(contentsOf: url) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: 300)
+            } else {
+                NookIcon(.inbox, size: 56)
+                    .foregroundStyle(.quaternary)
+            }
+            VStack(spacing: 4) {
+                Text("收件箱空空如也")
+                    .font(.nook(size: 14, weight: .medium))
+                    .foregroundStyle(NookTheme.t2(colorScheme))
+                Text("点右上角 + 添加待办，或让 Claude 帮你记一笔")
+                    .font(.nook(size: 11))
+                    .foregroundStyle(NookTheme.t4(colorScheme))
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
     }
 
     private func sortTasks(_ list: [NookTask]) -> [NookTask] {
@@ -158,11 +184,14 @@ struct TaskRowView: View {
     let onDetail: (Int) -> Void
     let isReorderEnabled: Bool
     @Binding var draggingTaskId: Int?
+    var isDropTarget: Bool = false
     @State private var isHovering = false
     @State private var showSubtasks = false
     @State private var newSubtaskTitle = ""
     @State private var isAddingSubtask = false
     @Environment(\.colorScheme) private var colorScheme
+
+    private var isBeingDragged: Bool { draggingTaskId == task.id }
 
     private var checkboxColor: Color {
         // Uniform dark-gray accent for every checkbox — priority and tag colors
@@ -175,11 +204,21 @@ struct TaskRowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Insertion-line indicator above target row when something's being dragged onto it
+            Rectangle()
+                .fill(NookTheme.accent(colorScheme))
+                .frame(height: isDropTarget ? 2 : 0)
+                .padding(.horizontal, 8)
+                .opacity(isDropTarget ? 1 : 0)
+                .animation(.easeInOut(duration: 0.12), value: isDropTarget)
+
             mainRow
             if showSubtasks && !task.completed {
                 subtaskSection
             }
         }
+        .opacity(isBeingDragged ? 0.35 : 1.0)
+        .animation(.easeInOut(duration: 0.12), value: isBeingDragged)
     }
 
     private var mainRow: some View {
@@ -282,7 +321,7 @@ struct TaskRowView: View {
                         .fill(checkboxColor)
                         .frame(width: 18, height: 18)
                     NookIcon(.checkmark, size: 9)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(NookTheme.tagOnFg(colorScheme))
                         .transition(.scale.combined(with: .opacity))
                 }
             }
@@ -354,7 +393,7 @@ struct TaskRowView: View {
                                     .fill(NookTheme.accent(colorScheme))
                                     .frame(width: 13, height: 13)
                                 NookIcon(.checkmark, size: 6)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(NookTheme.tagOnFg(colorScheme))
                             }
                         }
                         .frame(width: 20, height: 20)

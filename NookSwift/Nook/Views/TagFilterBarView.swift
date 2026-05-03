@@ -6,6 +6,7 @@ struct TagFilterBarView: View {
     @State private var showAddInput = false
     @State private var newTagName = ""
     @State private var isExpanded = false
+    @State private var hoveredTag: String?
     @Environment(\.colorScheme) private var colorScheme
 
     private let maxCollapsedTags = 8
@@ -46,9 +47,19 @@ struct TagFilterBarView: View {
                         label: tag,
                         color: color,
                         count: count > 0 ? count : nil,
-                        isActive: filterTag == tag
+                        isActive: filterTag == tag,
+                        isHovered: hoveredTag == tag,
+                        onDelete: {
+                            if filterTag == tag { filterTag = "" }
+                            hoveredTag = nil
+                            store.deleteTag(tag)
+                        }
                     ) {
                         filterTag = filterTag == tag ? "" : tag
+                    }
+                    .onHover { hovering in
+                        if hovering { hoveredTag = tag }
+                        else if hoveredTag == tag { hoveredTag = nil }
                     }
                     .contextMenu {
                         Button("删除标签", role: .destructive) {
@@ -116,9 +127,14 @@ struct TagFilterBarView: View {
 
     // MARK: - Tag Chip
 
-    /// HTML spec: height 24, font 11/500, padding 0 10, gap 4, dot 6×6, count 10/500 opacity .55.
-    /// Inactive bg = tag color at ~8% opacity (or bg2 for "all"/no color). Active bg = tagOn token.
-    private func tagChip(label: String, color: String?, count: Int?, isActive: Bool, onTap: @escaping () -> Void) -> some View {
+    /// HTML spec: height 24, font 11/500, padding 0 10, gap 4, dot 6×6.
+    /// Inactive bg = tag color at ~10% opacity. Active bg = tagOn token.
+    /// On hover: count 隐藏 → × 出现在同一槽位（不破坏 chip 宽度，不在 chip 外飘）
+    private func tagChip(
+        label: String, color: String?, count: Int?, isActive: Bool,
+        isHovered: Bool = false, onDelete: (() -> Void)? = nil,
+        onTap: @escaping () -> Void
+    ) -> some View {
         HStack(spacing: 4) {
             if let color, !isActive {
                 Circle()
@@ -127,10 +143,28 @@ struct TagFilterBarView: View {
             }
             Text(label)
                 .font(.nook(size: 11, weight: .medium))
-            if let count {
-                Text("\(count)")
-                    .font(.nook(size: 10, weight: .medium))
-                    .foregroundStyle(chipForeground(isActive: isActive).opacity(0.55))
+            // ZStack 占位：count 和 × 重叠在同一槽位，opacity 切换显隐
+            // → chip 宽度始终 = max(count 宽, × 宽)，hover 时不抖动 / 不重排
+            if count != nil || onDelete != nil {
+                ZStack {
+                    if let count {
+                        Text("\(count)")
+                            .font(.nook(size: 10, weight: .medium))
+                            .foregroundStyle(chipForeground(isActive: isActive).opacity(0.55))
+                            .opacity(isHovered ? 0 : 1)
+                    }
+                    if onDelete != nil {
+                        Button { onDelete?() } label: {
+                            NookIcon(.x, size: 8)
+                                .foregroundStyle(chipForeground(isActive: isActive).opacity(0.7))
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .opacity(isHovered ? 1 : 0)
+                        .allowsHitTesting(isHovered)
+                        .help("删除标签")
+                    }
+                }
             }
         }
         .foregroundStyle(chipForeground(isActive: isActive))
