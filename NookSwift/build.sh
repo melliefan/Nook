@@ -34,6 +34,12 @@ cp Nook_bin "$APP_DIR/MacOS/Nook"
 cp Nook/Resources/Info.plist "$APP_DIR/"
 cp -R Nook/Resources/Assets.xcassets "$APP_DIR/Resources/" 2>/dev/null || true
 
+# Bundle the nooktodo CLI script — installed via Settings popover
+if [ -f scripts/nooktodo ]; then
+  cp scripts/nooktodo "$APP_DIR/Resources/nooktodo"
+  chmod 755 "$APP_DIR/Resources/nooktodo"
+fi
+
 # Copy app icon from Electron build if available
 ICON_SRC="../build/icon.icns"
 if [ -f "$ICON_SRC" ]; then
