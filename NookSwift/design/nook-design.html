@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Nook · 设计稿（线上版本）</title>
+<style>
+/* ════════════════════════════════════════════════════════
+   Nook 设计稿（线上版本对齐 v1.0.0）
+   合并自：nook-panel / hide-button-v2 / tag-create-v2 /
+          tag-delete-v2 / calendar-sync-v1
+   设计 token 与 NookSwift/Nook/Views/NookTheme.swift 对齐
+   ════════════════════════════════════════════════════════ */
+
+:root {
+  --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  --mono: 'SF Mono', Menlo, monospace;
+  --w: 360px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="light"] {
+  --bg-page: #E5E5EA;
+  --bg: #FCFCFD;
+  --bg2: #F1F1F4;
+  --bg-hover: #E8E8ED;
+  --t1: #1E1E2A;
+  --t2: #5C5C6E;
+  --t3: #8A8A96;
+  --t4: #BBBBC2;
+  --line: #DDDDE2;
+  --pn: #D4D4DA;
+  --accent: #3A3A48;
+  --accent-bg: rgba(58,58,72,0.08);
+  --accent-fg: #F7F7FA;
+  --red: #D32F2F;
+  --orange: #FFB300;
+  --teal: #0288D1;
+  --green: #34C759;
+  --snippet-bg: rgba(232,232,238,0.74);
+  --snippet-fg: #4A4A55;
+  --snippet-fg2: #8E8E98;
+  --shadow: 0 12px 40px rgba(30,30,42,0.08), 0 0 0 1px rgba(30,30,42,0.04);
+  --shadow-pop: 0 8px 24px rgba(30,30,42,0.12);
+}
+
+[data-theme="dark"] {
+  --bg-page: #141420;
+  --bg: #1A1A26;
+  --bg2: #2E2E3C;
+  --bg-hover: #343442;
+  --t1: #E5E5EA;
+  --t2: #8A8A96;
+  --t3: #646470;
+  --t4: #777784;
+  --line: #383846;
+  --pn: #4A4A54;
+  --accent: #E5E5EA;
+  --accent-bg: rgba(229,229,234,0.10);
+  --accent-fg: #1A1A26;
+  --red: #EF5350;
+  --orange: #FFC107;
+  --teal: #42A5F5;
+  --green: #30D158;
+  --snippet-bg: #18182A;
+  --snippet-fg: #AAAAB2;
+  --snippet-fg2: #646470;
+  --shadow: 0 12px 40px rgba(8,8,16,0.4), 0 0 0 1px rgba(247,247,250,0.04);
+  --shadow-pop: 0 8px 24px rgba(8,8,16,0.3);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: #DBDBDF;
+  color: #1E1E2A;
+  -webkit-font-smoothing: antialiased;
+  padding: 40px 60px 80px;
+}
+
+/* ─── doc chrome ─── */
+.doc-h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 6px; }
+.doc-meta { font-size: 12px; color: #7A7A85; margin-bottom: 32px; line-height: 1.65; max-width: 720px; }
+.doc-meta code { background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 4px; font-family: var(--mono); font-size: 11px; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 40px; }
+.toc a { font-size: 11px; color: #5C5C6E; padding: 4px 10px; background: rgba(255,255,255,0.6); border-radius: 999px; text-decoration: none; border: 1px solid rgba(0,0,0,0.05); }
+.toc a:hover { background: white; }
+
+.section { margin-bottom: 64px; scroll-margin-top: 30px; }
+.sec-h2 { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: #1E1E2A; }
+.sec-desc { font-size: 12px; color: #6E6E78; line-height: 1.7; margin-bottom: 18px; max-width: 680px; }
+.sec-desc strong { color: #2E2E38; }
+.sec-desc code { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; font-family: var(--mono); font-size: 11px; }
+
+.label-strip {
+  background: #FCFCFD; padding: 5px 11px;
+  border-radius: 5px; font-size: 11px; color: #7A7A85;
+  border: 1px solid #DDDDE2;
+  margin-bottom: 8px; display: inline-block;
+}
+.label-strip strong { color: #1E1E2A; font-weight: 600; }
+
+.row-frame {
+  display: flex; gap: 36px; flex-wrap: wrap; align-items: flex-start;
+}
+
+/* ════════ Panel (主面板) ════════ */
+.panel {
+  width: var(--w); height: 700px;
+  background: var(--bg);
+  border-radius: 14px; box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  overflow: hidden; color: var(--t1);
+  font-family: var(--sans);
+}
+.panel-narrow { width: 320px; height: auto; }
+.panel-md { width: 380px; }
+
+/* ─── header ─── */
+.hd {
+  padding: 22px 18px 12px; flex-shrink: 0;
+}
+.hd-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 6px;
+}
+.hd h1 {
+  font-size: 22px; font-weight: 800; color: var(--t1);
+  letter-spacing: -0.45px;
+  display: flex; align-items: baseline; gap: 6px;
+}
+.hd .cnt {
+  font-size: 11px; font-weight: 650; color: var(--t1);
+  background: var(--accent-bg);
+  padding: 2px 7px; border-radius: 10px;
+}
+.hd-actions { display: flex; gap: 1px; align-items: center; }
+.ab {
+  width: 30px; height: 30px; display: grid; place-items: center;
+  border-radius: 8px; cursor: pointer; color: var(--t3);
+  transition: background 0.1s, color 0.1s; position: relative;
+  border: none; background: transparent;
+}
+.ab:hover { background: var(--bg-hover); color: var(--t2); }
+.ab svg { width: 16px; height: 16px; stroke-width: 2; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.ab .tip {
+  position: absolute; top: 36px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: var(--accent-fg); font-size: 10px;
+  padding: 4px 8px; border-radius: 5px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity 0.12s;
+  z-index: 10; font-weight: 500;
+}
+.ab:hover .tip { opacity: 1; }
+
+/* ─── tag filter bar ─── */
+.tag-bar {
+  padding: 8px 14px 12px;
+  display: flex; flex-wrap: wrap; gap: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.t-chip {
+  padding: 3px 9px;
+  font-size: 11px; font-weight: 500;
+  color: var(--t2); background: var(--bg2);
+  border-radius: 9px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+  border: 1px solid transparent;
+}
+.t-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+.t-chip.on { background: var(--accent); color: var(--accent-fg); }
+.t-chip.on .dot { background: var(--accent-fg); }
+
+/* ─── task list ─── */
+.list { flex: 1; padding: 10px 8px; overflow-y: auto; }
+.task {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 9px 10px; border-radius: 9px; cursor: pointer;
+  transition: background 0.12s;
+}
+.task:hover { background: var(--bg-hover); }
+.task .box {
+  width: 16px; height: 16px; border-radius: 5px;
+  border: 1.5px solid var(--pn);
+  flex-shrink: 0; margin-top: 1px;
+  display: grid; place-items: center;
+  transition: all 0.15s;
+}
+.task .box.done {
+  background: var(--accent); border-color: var(--accent);
+  color: var(--accent-fg); font-size: 10px; font-weight: 700;
+}
+.task-body { flex: 1; min-width: 0; }
+.task-tt {
+  font-size: 13px; font-weight: 500; color: var(--t1);
+  line-height: 1.35; word-break: break-word;
+}
+.task.done .task-tt { color: var(--t3); text-decoration: line-through; }
+.task-meta {
+  display: flex; gap: 6px; align-items: center;
+  margin-top: 4px;
+  font-size: 10.5px; color: var(--t3);
+}
+.task-meta .flag-h { color: var(--red); }
+.task-meta .flag-m { color: var(--orange); }
+.task-meta .flag-l { color: var(--teal); }
+.task-meta .due-overdue { color: var(--red); font-weight: 600; }
+.task-tags { display: inline-flex; gap: 3px; }
+.mini-tag {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 0 6px; height: 16px;
+  font-size: 10px; color: var(--t2);
+  background: var(--bg2); border-radius: 8px;
+}
+.mini-tag .dot { width: 5px; height: 5px; border-radius: 50%; }
+
+/* ─── add input ─── */
+.add-bar {
+  margin: 6px 12px 8px; padding: 0 12px;
+  height: 36px; border-radius: 9px;
+  background: var(--bg2);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--t2);
+}
+.add-bar .plus { font-size: 14px; color: var(--t3); }
+
+/* ─── snippets section (footer) ─── */
+.snip {
+  padding: 10px 12px 12px; flex-shrink: 0;
+  background: var(--snippet-bg);
+  border-top: 1px solid var(--line);
+}
+.snip-title {
+  font-size: 10px; font-weight: 600;
+  color: var(--snippet-fg2); letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.snip-list { display: flex; flex-direction: column; gap: 2px; }
+.snip-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px; border-radius: 6px;
+  font-size: 11.5px; color: var(--snippet-fg);
+  cursor: pointer;
+}
+.snip-row:hover { background: var(--bg-hover); }
+.snip-row .key {
+  font-family: var(--mono); font-size: 9.5px;
+  color: var(--snippet-fg2);
+  background: var(--bg); padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ════════ Detail (任务详情) ════════ */
+.detail { padding: 18px 20px 14px; }
+.detail-back { color: var(--t3); font-size: 13px; cursor: pointer; }
+.detail-title-input {
+  border: none; outline: none; background: transparent;
+  font-size: 22px; font-weight: 700; color: var(--t1);
+  margin: 12px 0 4px;
+  letter-spacing: -.45px; width: 100%;
+  font-family: var(--sans);
+}
+.detail-desc-area {
+  border: none; outline: none; background: transparent;
+  font-size: 12px; color: var(--t2); width: 100%;
+  font-family: var(--sans); resize: none; line-height: 1.5;
+  margin-bottom: 12px;
+}
+.detail-meta {
+  display: flex; gap: 10px; align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+.meta-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-weight: 500; color: var(--accent); cursor: pointer;
+}
+.meta-chip.empty { color: var(--t4); }
+.meta-chip.flag-h { color: var(--red); }
+.meta-chip.flag-m { color: var(--orange); }
+.detail-tags { padding: 12px 0 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+.add-tag-btn {
+  font-size: 11px; color: var(--t3);
+  border: 1px dashed var(--line); border-radius: 11px;
+  padding: 0 9px; height: 22px;
+  display: inline-flex; align-items: center; gap: 3px;
+  cursor: pointer; background: transparent;
+}
+.detail-subs { padding: 4px 0; }
+.sub {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 0; font-size: 12px; color: var(--t1);
+}
+.sub-box {
+  width: 13px; height: 13px; border-radius: 3px;
+  border: 1.5px solid var(--t4);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.sub-box.done {
+  background: var(--accent); border-color: var(--accent);
+  color: var(--accent-fg); font-size: 8px; font-weight: 700;
+}
+.sub.done span { color: var(--t3); text-decoration: line-through; }
+.detail-footer {
+  display: flex; align-items: center; gap: 8px;
+  padding-top: 14px;
+}
+.detail-footer .spacer { flex: 1; }
+.btn {
+  height: 28px; padding: 0 14px;
+  border-radius: 7px; border: 1px solid var(--line);
+  background: var(--bg);
+  font-size: 12px; font-weight: 500; color: var(--t1);
+  cursor: pointer; font-family: var(--sans);
+}
+.btn:hover { background: var(--bg-hover); }
+.btn.primary {
+  background: var(--accent); color: var(--accent-fg);
+  border-color: var(--accent);
+}
+.btn.danger { color: var(--red); border-color: rgba(211,47,47,0.2); }
+
+/* ════════ Tag selector (sheet) ════════ */
+.sheet {
+  width: 300px; background: var(--bg);
+  border-radius: 14px; border: 1px solid var(--line);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  color: var(--t1);
+}
+.sheet-hd {
+  height: 44px; padding: 0 14px 0 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+.sheet-title { font-size: 13px; font-weight: 600; }
+.sheet-close {
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border: none; background: transparent;
+  color: var(--t3); cursor: pointer; border-radius: 6px;
+}
+.sheet-close:hover { background: var(--bg2); color: var(--t1); }
+
+.search {
+  margin: 10px 12px 0; height: 32px;
+  border: 1px solid var(--line);
+  background: var(--bg); border-radius: 8px;
+  padding: 0 10px;
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px;
+}
+.search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.search-input {
+  flex: 1; min-width: 0;
+  border: none; outline: none; background: transparent;
+  font-family: inherit; font-size: 12px; color: var(--t1);
+}
+
+.tag-list {
+  margin: 8px 8px 0; padding: 4px;
+  max-height: 252px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 1px;
+}
+.tag-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 7px;
+  font-size: 12px; cursor: pointer;
+}
+.tag-row:hover { background: var(--bg-hover); }
+.tag-row .check {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1.5px solid var(--pn);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.tag-row.on .check {
+  background: var(--accent); border-color: var(--accent);
+  color: var(--accent-fg); font-size: 9px; font-weight: 700;
+}
+.tag-row .swatch { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.tag-row .name { flex: 1; color: var(--t1); }
+.tag-row .x {
+  width: 18px; height: 18px; display: grid; place-items: center;
+  color: var(--t4); border-radius: 4px;
+  opacity: 0; transition: opacity 0.1s;
+}
+.tag-row:hover .x { opacity: 1; }
+.tag-row .x:hover { background: rgba(211,47,47,0.1); color: var(--red); }
+
+.sheet-ft {
+  padding: 8px 12px 12px; border-top: 1px solid var(--line);
+  display: flex; align-items: center; gap: 8px;
+}
+.sheet-ft .new {
+  flex: 1; height: 30px; padding: 0 10px;
+  border: 1px dashed var(--line); border-radius: 7px;
+  font-size: 11.5px; color: var(--t3);
+  display: flex; align-items: center; gap: 5px;
+  cursor: pointer; background: transparent;
+}
+
+/* ════════ Settings popover ════════ */
+.settings {
+  width: 280px; padding: 16px;
+}
+.sec-title {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--t3);
+  margin: 14px 0 8px;
+}
+.sec-title.first { margin-top: 0; }
+.seg {
+  display: inline-flex; padding: 2px;
+  background: var(--bg2); border-radius: 7px;
+  font-size: 11.5px;
+}
+.seg .opt { padding: 4px 10px; border-radius: 5px; color: var(--t2); cursor: pointer; }
+.seg .opt.on { background: var(--bg); color: var(--t1); box-shadow: 0 1px 2px rgba(0,0,0,0.08); font-weight: 500; }
+
+.corners {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  margin-bottom: 4px;
+}
+.corner-card {
+  position: relative; height: 50px;
+  background: var(--bg2); border-radius: 7px;
+  display: flex; align-items: flex-end; justify-content: flex-end;
+  padding: 4px 7px; font-size: 10.5px; color: var(--t3);
+  cursor: pointer; overflow: hidden;
+}
+.corner-card.on { background: var(--accent-bg); color: var(--t1); }
+.corner-card .diag { position: absolute; width: 14px; height: 14px; background: var(--t4); border-radius: 0 0 100% 0; }
+.corner-card.tl .diag { top: 0; left: 0; border-radius: 0 0 100% 0; }
+.corner-card.tr .diag { top: 0; right: 0; border-radius: 0 0 0 100%; }
+.corner-card.bl .diag { bottom: 0; left: 0; border-radius: 0 100% 0 0; }
+.corner-card.br .diag { bottom: 0; right: 0; border-radius: 100% 0 0 0; }
+.corner-card.on .diag { background: var(--accent); }
+
+.cli-cmd {
+  font-family: var(--mono); font-size: 10px;
+  background: var(--bg2); padding: 8px 10px;
+  border-radius: 6px; color: var(--t2);
+  white-space: pre-wrap; word-break: break-all;
+  line-height: 1.5; margin-bottom: 6px;
+}
+.install-btn {
+  width: 100%; height: 28px;
+  background: var(--accent); color: var(--accent-fg);
+  border: none; border-radius: 6px;
+  font-size: 11.5px; font-weight: 500; cursor: pointer;
+}
+
+.cal-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 0;
+}
+.icon-box {
+  width: 28px; height: 28px;
+  background: var(--accent-bg); color: var(--accent);
+  border-radius: 7px; display: grid; place-items: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.cal-row .label {
+  flex: 1; font-size: 12px; color: var(--t1); font-weight: 500;
+  display: flex; flex-direction: column; gap: 1px;
+}
+.cal-row .label .help {
+  font-size: 10.5px; color: var(--t3); font-weight: 400;
+}
+.switch {
+  width: 32px; height: 20px;
+  background: var(--pn); border-radius: 10px;
+  position: relative; cursor: pointer;
+  transition: background 0.15s;
+}
+.switch::after {
+  content: ''; position: absolute;
+  top: 2px; left: 2px; width: 16px; height: 16px;
+  background: white; border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  transition: left 0.18s;
+}
+.switch.on { background: var(--accent); }
+.switch.on::after { left: 14px; }
+
+.status-line {
+  font-size: 10.5px;
+  padding: 6px 0;
+  display: flex; align-items: center; gap: 6px;
+}
+.status-line .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-line.ok { color: var(--green); }
+.status-line.ok .dot { background: var(--green); }
+.status-line.warn { color: var(--orange); }
+.status-line.warn .dot { background: var(--orange); }
+.status-line.err { color: var(--red); }
+.status-line.err .dot { background: var(--red); }
+
+.secondary-btn {
+  width: 100%; height: 28px;
+  background: var(--bg2); color: var(--t1);
+  border: 1px solid var(--line); border-radius: 6px;
+  font-size: 11.5px; cursor: pointer; font-family: inherit;
+  margin-top: 6px;
+}
+.secondary-btn:hover { background: var(--bg-hover); }
+.quit-btn {
+  width: 100%; height: 28px;
+  background: transparent; color: var(--red);
+  border: 1px solid rgba(211,47,47,0.2);
+  border-radius: 6px;
+  font-size: 11.5px; cursor: pointer;
+  margin-top: 12px; font-family: inherit;
+}
+
+hr { border: none; border-top: 1px solid var(--line); margin: 14px 0 0; }
+
+/* ════════ Empty state ════════ */
+.empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 0 24px;
+}
+.empty-img {
+  width: 132px; height: 132px;
+  background: var(--bg2);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 56px; color: var(--t3);
+  margin-bottom: 16px;
+}
+.empty-tt {
+  font-size: 14px; font-weight: 600; color: var(--t1);
+  margin-bottom: 6px;
+}
+.empty-desc {
+  font-size: 11.5px; color: var(--t3);
+  text-align: center; line-height: 1.55;
+}
+</style>
+</head>
+<body>
+
+<h1 class="doc-h1">Nook · 设计稿</h1>
+<div class="doc-meta">
+  线上版本视觉对齐（v1.0.0 · macOS 原生 Swift/SwiftUI）。<br>
+  设计 token 与 <code>NookSwift/Nook/Views/NookTheme.swift</code> 一致：accent <code>#3A3A48</code> · light bg <code>#FCFCFD</code> · dark bg <code>#1A1A26</code>。<br>
+  本文档替代历史散稿（nook-panel / hide-button-v2 / tag-create-v2 / tag-delete-v2 / calendar-sync-v1）。
+</div>
+<nav class="toc">
+  <a href="#main">主面板</a>
+  <a href="#detail">任务详情</a>
+  <a href="#tag">标签选择器</a>
+  <a href="#hide">收起按钮</a>
+  <a href="#settings">设置</a>
+  <a href="#empty">空态</a>
+</nav>
+
+<!-- ═══════════ 主面板 ═══════════ -->
+<section class="section" id="main">
+  <h2 class="sec-h2">1. 主面板</h2>
+  <p class="sec-desc">
+    宽 360px、高跟随屏幕（默认 700px），无边框 NSPanel + backdrop blur。
+    顶部标题 + 操作按钮，下方标签筛选条，主体任务列表，底部 snippets 快捷粘贴。
+  </p>
+  <div class="row-frame">
+    <div>
+      <div class="label-strip"><strong>浅色模式</strong></div>
+      <div class="panel" data-theme="light">
+        <div class="hd">
+          <div class="hd-row">
+            <h1>收集箱<span class="cnt">7</span></h1>
+            <div class="hd-actions">
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="tip">添加任务</span></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M12 17l-5-5h3V8h4v4h3z"/></svg><span class="tip">钉住面板</span></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M9 18h6"/></svg><span class="tip">排序</span></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8L4.2 7.2A2 2 0 1 1 7 4.4l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="tip">设置</span></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M11 17l-7-5 7-5M19 17l-7-5 7-5"/></svg><span class="tip">收起</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="tag-bar">
+          <span class="t-chip on">全部</span>
+          <span class="t-chip"><span class="dot" style="background:#4FC3F7"></span>工作</span>
+          <span class="t-chip"><span class="dot" style="background:#FFB74D"></span>客户A</span>
+          <span class="t-chip"><span class="dot" style="background:#BA68C8"></span>UPclaw</span>
+          <span class="t-chip"><span class="dot" style="background:#81C784"></span>个人</span>
+        </div>
+        <div class="list">
+          <div class="task">
+            <div class="box"></div>
+            <div class="task-body">
+              <div class="task-tt">客户A公司投标书</div>
+              <div class="task-meta">
+                <span class="flag-h">🚩</span><span>5月8日</span>
+                <span class="task-tags">
+                  <span class="mini-tag"><span class="dot" style="background:#4FC3F7"></span>工作</span>
+                  <span class="mini-tag"><span class="dot" style="background:#FFB74D"></span>客户A</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="task">
+            <div class="box"></div>
+            <div class="task-body">
+              <div class="task-tt">UPclaw 产品功能定稿</div>
+              <div class="task-meta">
+                <span class="flag-m">🚩</span>
+                <span class="task-tags">
+                  <span class="mini-tag"><span class="dot" style="background:#BA68C8"></span>UPclaw</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="task">
+            <div class="box"></div>
+            <div class="task-body">
+              <div class="task-tt">下周客户拜访行程确认</div>
+              <div class="task-meta">
+                <span class="due-overdue">5月2日 · 已逾期</span>
+              </div>
+            </div>
+          </div>
+          <div class="task">
+            <div class="box"></div>
+            <div class="task-body">
+              <div class="task-tt">看完火山方舟新功能 demo 视频</div>
+              <div class="task-meta">
+                <span class="task-tags"><span class="mini-tag"><span class="dot" style="background:#81C784"></span>个人</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="task done">
+            <div class="box done">✓</div>
+            <div class="task-body">
+              <div class="task-tt">工作 GLM-4.6 价格 PPT 改版</div>
+            </div>
+          </div>
+          <div class="task done">
+            <div class="box done">✓</div>
+            <div class="task-body">
+              <div class="task-tt">月度报表整理</div>
+            </div>
+          </div>
+        </div>
+        <div class="add-bar"><span class="plus">+</span><span>添加任务...（⌘ N）</span></div>
+        <div class="snip">
+          <div class="snip-title">快捷粘贴</div>
+          <div class="snip-list">
+            <div class="snip-row"><span class="key">⌥1</span><span>工作 SA · melliefan</span></div>
+            <div class="snip-row"><span class="key">⌥2</span><span>hello@melliefan.com</span></div>
+            <div class="snip-row"><span class="key">⌥3</span><span>https://bigmodel.cn</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label-strip"><strong>深色模式</strong></div>
+      <div class="panel" data-theme="dark">
+        <div class="hd">
+          <div class="hd-row">
+            <h1>收集箱<span class="cnt">7</span></h1>
+            <div class="hd-actions">
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M12 17l-5-5h3V8h4v4h3z"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M9 18h6"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M11 17l-7-5 7-5M19 17l-7-5 7-5"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="tag-bar">
+          <span class="t-chip on">全部</span>
+          <span class="t-chip"><span class="dot" style="background:#4FC3F7"></span>工作</span>
+          <span class="t-chip"><span class="dot" style="background:#FFB74D"></span>客户A</span>
+          <span class="t-chip"><span class="dot" style="background:#BA68C8"></span>UPclaw</span>
+        </div>
+        <div class="list">
+          <div class="task">
+            <div class="box"></div>
+            <div class="task-body">
+              <div class="task-tt">客户A公司投标书</div>
+              <div class="task-meta">
+                <span class="flag-h">🚩</span><span>5月8日</span>
+                <span class="task-tags">
+                  <span class="mini-tag"><span class="dot" style="background:#4FC3F7"></span>工作</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="task">
+            <div class="box"></div>
+            <div class="task-body">
+              <div class="task-tt">UPclaw 产品功能定稿</div>
+              <div class="task-meta">
+                <span class="flag-m">🚩</span>
+                <span class="task-tags">
+                  <span class="mini-tag"><span class="dot" style="background:#BA68C8"></span>UPclaw</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="task done">
+            <div class="box done">✓</div>
+            <div class="task-body">
+              <div class="task-tt">工作 GLM-4.6 价格 PPT 改版</div>
+            </div>
+          </div>
+        </div>
+        <div class="add-bar"><span class="plus">+</span><span>添加任务...（⌘ N）</span></div>
+        <div class="snip">
+          <div class="snip-title">快捷粘贴</div>
+          <div class="snip-list">
+            <div class="snip-row"><span class="key">⌥1</span><span>工作 SA · melliefan</span></div>
+            <div class="snip-row"><span class="key">⌥2</span><span>hello@melliefan.com</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 任务详情 ═══════════ -->
+<section class="section" id="detail">
+  <h2 class="sec-h2">2. 任务详情 / 编辑</h2>
+  <p class="sec-desc">
+    点击任务标题进入编辑态。标题、描述、截止日期、优先级、标签、子任务、保存/删除。从右侧滑入。
+  </p>
+  <div class="row-frame">
+    <div>
+      <div class="label-strip"><strong>编辑态</strong> — 全字段</div>
+      <div class="panel panel-md" data-theme="light" style="height:auto;">
+        <div class="detail">
+          <span class="detail-back">‹  返回</span>
+          <input class="detail-title-input" value="客户A公司投标书">
+          <textarea class="detail-desc-area" rows="2">整理预算方案 + 客户对接材料，下周二之前给到 PMO</textarea>
+          <div class="detail-meta">
+            <span class="meta-chip">📅 5月8日</span>
+            <span style="color:var(--t4)">·</span>
+            <span class="meta-chip flag-h">🚩 高优先级</span>
+          </div>
+          <div class="detail-tags">
+            <span class="mini-tag"><span class="dot" style="background:#4FC3F7"></span>工作</span>
+            <span class="mini-tag"><span class="dot" style="background:#FFB74D"></span>客户A</span>
+            <button class="add-tag-btn">+ 标签</button>
+          </div>
+          <div class="detail-subs">
+            <div class="sub done"><span class="sub-box done">✓</span><span>梳理招标要求</span></div>
+            <div class="sub"><span class="sub-box"></span><span>完成预算测算</span></div>
+            <div class="sub"><span class="sub-box"></span><span>对齐法务条款</span></div>
+          </div>
+          <div class="detail-footer">
+            <button class="btn danger">删除</button>
+            <div class="spacer"></div>
+            <button class="btn primary">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label-strip"><strong>新建态</strong> — 空字段（深色）</div>
+      <div class="panel panel-md" data-theme="dark" style="height:auto;">
+        <div class="detail">
+          <span class="detail-back">‹  返回</span>
+          <input class="detail-title-input" placeholder="新建任务...">
+          <textarea class="detail-desc-area" rows="2" placeholder="备注（可选）"></textarea>
+          <div class="detail-meta">
+            <span class="meta-chip empty">📅 选择日期</span>
+            <span style="color:var(--t4)">·</span>
+            <span class="meta-chip empty">🚩 优先级</span>
+          </div>
+          <div class="detail-tags">
+            <button class="add-tag-btn">+ 标签</button>
+          </div>
+          <div class="detail-footer">
+            <div class="spacer"></div>
+            <button class="btn primary">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 标签选择器 ═══════════ -->
+<section class="section" id="tag">
+  <h2 class="sec-h2">3. 标签选择器（v2）</h2>
+  <p class="sec-desc">
+    点 <code>+ 标签</code> 弹出。300×自适应高 sheet，模糊背景遮罩。
+    支持搜索、勾选多个、hover 悬浮态显示删除 (×)、底部新建标签输入。
+  </p>
+  <div class="row-frame">
+    <div>
+      <div class="label-strip"><strong>选择已有 + 多选</strong></div>
+      <div class="sheet" data-theme="light">
+        <div class="sheet-hd">
+          <span class="sheet-title">选择标签</span>
+          <button class="sheet-close">✕</button>
+        </div>
+        <div class="search">
+          <span style="color:var(--t4)">🔍</span>
+          <input class="search-input" placeholder="搜索或新建...">
+        </div>
+        <div class="tag-list">
+          <div class="tag-row on">
+            <span class="check">✓</span>
+            <span class="swatch" style="background:#4FC3F7"></span>
+            <span class="name">工作</span>
+            <span class="x">✕</span>
+          </div>
+          <div class="tag-row on">
+            <span class="check">✓</span>
+            <span class="swatch" style="background:#FFB74D"></span>
+            <span class="name">客户A</span>
+            <span class="x">✕</span>
+          </div>
+          <div class="tag-row">
+            <span class="check"></span>
+            <span class="swatch" style="background:#BA68C8"></span>
+            <span class="name">UPclaw</span>
+            <span class="x">✕</span>
+          </div>
+          <div class="tag-row">
+            <span class="check"></span>
+            <span class="swatch" style="background:#81C784"></span>
+            <span class="name">个人</span>
+            <span class="x">✕</span>
+          </div>
+          <div class="tag-row">
+            <span class="check"></span>
+            <span class="swatch" style="background:#F06292"></span>
+            <span class="name">家庭</span>
+            <span class="x">✕</span>
+          </div>
+        </div>
+        <div class="sheet-ft">
+          <button class="new">+ 新建标签</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label-strip"><strong>新建标签输入态</strong></div>
+      <div class="sheet" data-theme="light">
+        <div class="sheet-hd">
+          <span class="sheet-title">选择标签</span>
+          <button class="sheet-close">✕</button>
+        </div>
+        <div class="search">
+          <span style="color:var(--t4)">🔍</span>
+          <input class="search-input" value="火山方舟" style="color:var(--t1);">
+        </div>
+        <div class="tag-list">
+          <div class="tag-row" style="border:1px dashed var(--accent);background:var(--accent-bg);">
+            <span class="check"></span>
+            <span class="swatch" style="background:var(--accent)"></span>
+            <span class="name" style="color:var(--accent);">+ 创建「火山方舟」</span>
+          </div>
+        </div>
+        <div class="sheet-ft">
+          <button class="new" style="opacity:0.5;">↵ 回车确认创建</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label-strip"><strong>删除确认（hover × 后）</strong></div>
+      <div class="sheet" data-theme="light">
+        <div class="sheet-hd">
+          <span class="sheet-title" style="color:var(--red);">删除标签「家庭」？</span>
+        </div>
+        <div style="padding:14px 16px;font-size:11.5px;color:var(--t2);line-height:1.6;">
+          标签会从所有任务上移除，但任务本身不会被删除。<br>
+          <span style="color:var(--t3);">3 个任务受影响</span>
+        </div>
+        <div class="sheet-ft" style="justify-content:flex-end;border-top:1px solid var(--line);">
+          <button class="btn">取消</button>
+          <button class="btn" style="background:var(--red);color:white;border-color:var(--red);">删除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 收起按钮 ═══════════ -->
+<section class="section" id="hide">
+  <h2 class="sec-h2">4. 收起按钮（«« · sidebar collapse）</h2>
+  <p class="sec-desc">
+    Nook 是 menu-bar 风格 agent app，按钮"隐藏面板"而非"退出进程"，所以用 <strong>«« 双 chevron</strong>（sidebar 收起的国际通用图标），
+    避免 × 引起的"是否退出"歧义。Hover 显示「收起」tooltip。真正退出走 设置 → 退出 Nook。
+  </p>
+  <div class="row-frame">
+    <div>
+      <div class="label-strip"><strong>正常态</strong></div>
+      <div class="panel" data-theme="light" style="height:auto;">
+        <div class="hd">
+          <div class="hd-row">
+            <h1>收集箱<span class="cnt">7</span></h1>
+            <div class="hd-actions">
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M12 17l-5-5h3V8h4v4h3z"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M9 18h6"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="ab" style="background:var(--bg-hover);color:var(--t2);">
+                <svg viewBox="0 0 24 24"><path d="M11 17l-7-5 7-5M19 17l-7-5 7-5"/></svg>
+                <span class="tip" style="opacity:1;">收起</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="label-strip"><strong>对比 — 旧 ×（已废弃）</strong></div>
+      <div class="panel" data-theme="light" style="height:auto;opacity:0.55;">
+        <div class="hd">
+          <div class="hd-row">
+            <h1>收集箱<span class="cnt">7</span></h1>
+            <div class="hd-actions">
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M12 17l-5-5h3V8h4v4h3z"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M9 18h6"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:10.5px;color:var(--t4);padding:0 18px 14px;">朋友测试反馈：以为彻底退出了 → 改成 ««</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 设置 popover ═══════════ -->
+<section class="section" id="settings">
+  <h2 class="sec-h2">5. 设置 Popover</h2>
+  <p class="sec-desc">
+    设置按钮（齿轮）点击后从右侧滑出 popover。包含：外观、热角触发、CLI 安装、Apple 提醒事项同步、退出。<br>
+    提醒事项同步：开关 + 状态行 + 重新全量同步按钮。授权失败时给系统设置入口。
+  </p>
+  <div class="row-frame">
+    <div>
+      <div class="label-strip"><strong>主设置（同步关）</strong></div>
+      <div class="panel" data-theme="light" style="height:auto;">
+        <div class="settings">
+          <div class="sec-title first">外观</div>
+          <div class="seg"><span class="opt">跟随系统</span><span class="opt on">浅色</span><span class="opt">深色</span></div>
+
+          <div class="sec-title">热角触发</div>
+          <div class="corners">
+            <div class="corner-card tl on"><div class="diag"></div>左上</div>
+            <div class="corner-card tr"><div class="diag"></div>右上</div>
+            <div class="corner-card bl"><div class="diag"></div>左下</div>
+            <div class="corner-card br"><div class="diag"></div>右下</div>
+          </div>
+
+          <div class="sec-title">命令行工具</div>
+          <div style="font-size:10.5px;color:var(--t3);line-height:1.5;margin-bottom:6px;">让 AI 帮你记待办，把命令贴到 Terminal 跑一次</div>
+          <div class="cli-cmd">NOOK=$(find /Applications ...)
+ln -sf "$NOOK/.../nooktodo" ~/.local/bin/</div>
+          <button class="install-btn">⧉ 一键复制安装命令</button>
+
+          <div class="sec-title">Apple 提醒事项同步</div>
+          <div class="cal-row">
+            <div class="icon-box">📅</div>
+            <div class="label">同步到「提醒事项」<span class="help">写入「Nook」列表，会请求权限</span></div>
+            <div class="switch"></div>
+          </div>
+
+          <hr>
+          <button class="quit-btn">⚡ 退出 Nook</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label-strip"><strong>同步开 — 已同步 12 个</strong></div>
+      <div class="panel" data-theme="light" style="height:auto;">
+        <div class="settings">
+          <div class="sec-title first">Apple 提醒事项同步</div>
+          <div class="cal-row">
+            <div class="icon-box">📅</div>
+            <div class="label">同步到「提醒事项」<span class="help">写入「Nook」列表</span></div>
+            <div class="switch on"></div>
+          </div>
+          <div class="status-line ok"><span class="dot"></span>已同步 12 个任务到 Reminders</div>
+          <button class="secondary-btn">↻ 重新全量同步</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label-strip"><strong>未授权</strong></div>
+      <div class="panel" data-theme="light" style="height:auto;">
+        <div class="settings">
+          <div class="sec-title first">Apple 提醒事项同步</div>
+          <div class="cal-row">
+            <div class="icon-box" style="background:rgba(255,179,0,0.15);color:#B86A00">⚠️</div>
+            <div class="label">同步到「提醒事项」<span class="help">没有权限</span></div>
+            <div class="switch"></div>
+          </div>
+          <div class="status-line warn"><span class="dot"></span>系统设置 → 隐私 → 提醒事项 中允许 Nook</div>
+          <button class="secondary-btn">↻ 重新请求</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label-strip"><strong>同步失败</strong></div>
+      <div class="panel" data-theme="light" style="height:auto;">
+        <div class="settings">
+          <div class="sec-title first">Apple 提醒事项同步</div>
+          <div class="cal-row">
+            <div class="icon-box" style="background:rgba(211,47,47,0.10);color:#B82B22">×</div>
+            <div class="label">同步到「提醒事项」<span class="help">上次同步失败</span></div>
+            <div class="switch on"></div>
+          </div>
+          <div class="status-line err"><span class="dot"></span>EventKit: 找不到「Nook」列表</div>
+          <button class="secondary-btn">↻ 重试</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 空态 ═══════════ -->
+<section class="section" id="empty">
+  <h2 class="sec-h2">6. 空态</h2>
+  <p class="sec-desc">
+    无任务时垂直居中展示插画 + 引导文案。文案克制，不卖弄。
+  </p>
+  <div class="row-frame">
+    <div>
+      <div class="label-strip"><strong>浅色</strong></div>
+      <div class="panel" data-theme="light">
+        <div class="hd">
+          <div class="hd-row">
+            <h1>收集箱<span class="cnt">0</span></h1>
+            <div class="hd-actions">
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M9 18h6"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M11 17l-7-5 7-5M19 17l-7-5 7-5"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="empty">
+          <div class="empty-img">📥</div>
+          <div class="empty-tt">收集箱是空的</div>
+          <div class="empty-desc">把脑里的事情先丢进来<br>之后再决定什么时候做</div>
+        </div>
+        <div class="add-bar"><span class="plus">+</span><span>添加任务...（⌘ N）</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label-strip"><strong>深色</strong></div>
+      <div class="panel" data-theme="dark">
+        <div class="hd">
+          <div class="hd-row">
+            <h1>收集箱<span class="cnt">0</span></h1>
+            <div class="hd-actions">
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M9 18h6"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="ab"><svg viewBox="0 0 24 24"><path d="M11 17l-7-5 7-5M19 17l-7-5 7-5"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="empty">
+          <div class="empty-img">📥</div>
+          <div class="empty-tt">收集箱是空的</div>
+          <div class="empty-desc">把脑里的事情先丢进来<br>之后再决定什么时候做</div>
+        </div>
+        <div class="add-bar"><span class="plus">+</span><span>添加任务...（⌘ N）</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

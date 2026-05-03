@@ -43,6 +43,8 @@ NookSwift/Nook.xcodeproj/project.xcworkspace/xcuserdata/
 # User data — IMPORTANT: never commit real tasks/passwords
 data/
 *.tasks.json
+build/user-data-backup-*.tar.gz
+*backup*.tar.gz
 
 # Dev notes (not public)
 record.md
