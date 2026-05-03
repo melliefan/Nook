@@ -244,24 +244,6 @@ struct SettingsPopoverView: View {
                 .buttonStyle(.plain)
             }
 
-            Button {
-                _ = ICSExporter.exportAndOpen(tasks: store.tasks.filter { !$0.completed && $0.dueDate != nil })
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 9, weight: .medium))
-                    Text("批量导出 .ics")
-                        .font(.nook(size: 10, weight: .medium))
-                }
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 5)
-                        .strokeBorder(NookTheme.line(colorScheme), lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
         }
     }
 

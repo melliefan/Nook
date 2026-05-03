@@ -75,24 +75,11 @@ struct TaskDetailView: View {
                 .foregroundStyle(NookTheme.t1(colorScheme))
                 .frame(maxWidth: .infinity)
 
-            HStack(spacing: 10) {
-                // 导出 .ics — only meaningful if a due date exists
-                if selectedDueDate != nil, let editingTask = task {
-                    Button {
-                        _ = ICSExporter.exportAndOpen(tasks: [editingTask])
-                    } label: {
-                        NookIcon(.copy, size: 12)
-                            .foregroundStyle(NookTheme.t3(colorScheme))
-                    }
-                    .buttonStyle(.plain)
-                    .help("导出此任务到日历 (.ics)")
-                }
-                Button("保存") { saveAndBack() }
-                    .font(.nook(size: 12, weight: .semibold))
-                    .foregroundStyle(NookTheme.accent(colorScheme))
-                    .buttonStyle(.plain)
-            }
-            .frame(width: 80, alignment: .trailing)
+            Button("保存") { saveAndBack() }
+                .font(.nook(size: 12, weight: .semibold))
+                .foregroundStyle(NookTheme.accent(colorScheme))
+                .buttonStyle(.plain)
+                .frame(width: 44, alignment: .trailing)
         }
         .padding(.horizontal, 18)
         .padding(.top, 14)
