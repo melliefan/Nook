@@ -196,10 +196,11 @@ struct HeaderView: View {
                     .popover(isPresented: $showSettings, arrowEdge: .bottom) {
                         SettingsPopoverView(store: store)
                     }
-                    headerButton(icon: .x, size: 16) {
+                    headerButton(icon: .sidebarLeft, size: 14) {
                         panelController.isPinned = false
                         panelController.hide()
                     }
+                    .help("收起面板（Nook 继续在后台运行，撞热角可再呼出。要彻底退出请去设置）")
                 }
             }
         }

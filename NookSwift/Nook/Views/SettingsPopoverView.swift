@@ -120,6 +120,29 @@ struct SettingsPopoverView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            // Quit Nook — agent app (LSUIElement) doesn't show in Dock, so this
+            // is the only obvious way to actually exit the process.
+            Divider()
+                .padding(.vertical, 2)
+            Button {
+                NSApp.terminate(nil)
+            } label: {
+                HStack(spacing: 6) {
+                    NookIcon(.x, size: 9)
+                    Text("退出 Nook")
+                        .font(.nook(size: 11, weight: .medium))
+                }
+                .foregroundStyle(.red.opacity(0.85))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.red.opacity(0.06))
+                )
+            }
+            .buttonStyle(.plain)
+            .help("彻底关闭 Nook 进程，热角和 CLI 都不再工作（重新打开 Nook.app 即可恢复）")
         }
         .padding(14)
         .frame(width: 240)

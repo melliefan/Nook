@@ -22,6 +22,7 @@ enum NookIconName: String, CaseIterable {
     case clock
     case chevron
     case checkmark
+    case sidebarLeft   // « 收起面板（避免与 .x 混淆）
 }
 
 struct NookIcon: View {
@@ -100,6 +101,9 @@ private enum NookIconStore {
             return #"<path fill="black" d="M15.835 11.63L9.205 5.2C8.79 4.799 8 5.042 8 5.57v12.86c0 .528.79.771 1.205.37l6.63-6.43a.5.5 0 0 0 0-.74"/>"#
         case .checkmark:
             return #"<path fill="black" fill-rule="evenodd" d="M20.53 5.47a.75.75 0 0 1 0 1.06l-10.5 10.5a.75.75 0 0 1-1.06 0l-5.5-5.5a.75.75 0 1 1 1.06-1.06l4.97 4.97L19.47 5.47a.75.75 0 0 1 1.06 0" clip-rule="evenodd"/>"#
+        case .sidebarLeft:
+            // 双 chevron «« — sidebar 收起的国际通用图标
+            return #"<path fill="black" fill-rule="evenodd" d="M11.53 5.47a.75.75 0 0 1 0 1.06L6.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0" clip-rule="evenodd"/><path fill="black" fill-rule="evenodd" d="M18.53 5.47a.75.75 0 0 1 0 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0" clip-rule="evenodd"/>"#
         }
     }
 }
