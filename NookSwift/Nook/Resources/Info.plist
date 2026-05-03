@@ -24,5 +24,7 @@
     <true/>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2026 melliefan. All rights reserved.</string>
+    <key>NSRemindersUsageDescription</key>
+    <string>Nook 把有截止日期的任务同步到「Nook」提醒事项列表，方便在 Apple Calendar 和 iPhone 上查看</string>
 </dict>
 </plist>

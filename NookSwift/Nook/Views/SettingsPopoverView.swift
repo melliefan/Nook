@@ -3,8 +3,12 @@ import SwiftUI
 struct SettingsPopoverView: View {
     @ObservedObject var store: Store
     @AppStorage("nook_appearance") private var appearance: String = "light"
+    @AppStorage("nook_reminders_sync") private var remindersEnabled: Bool = false
     @State private var copiedCli = false
+    @State private var syncStatusText: String = ""
     @Environment(\.colorScheme) private var colorScheme
+
+    private var remindersSync: RemindersSync? { AppDelegate.shared?.remindersSync }
 
     private let corners: [(NookSettings.CornerTrigger, String)] = [
         (.topLeft, "左上"), (.topRight, "右上"),
@@ -121,6 +125,13 @@ struct SettingsPopoverView: View {
                 .buttonStyle(.plain)
             }
 
+            // ──── 日历集成 ────
+            Text("日历集成")
+                .font(.nook(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+                .padding(.top, 4)
+            calendarIntegrationSection
+
             // Quit Nook — agent app (LSUIElement) doesn't show in Dock, so this
             // is the only obvious way to actually exit the process.
             Divider()
@@ -150,6 +161,118 @@ struct SettingsPopoverView: View {
         .background(NookTheme.bg(colorScheme))
         .onAppear {
             applyAppearance(appearance)
+            remindersSync?.refreshAuthorizationStatus()
+            updateSyncStatusText()
+        }
+    }
+
+    // MARK: - 日历集成 section
+
+    @ViewBuilder
+    private var calendarIntegrationSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                NookIcon(.calendar, size: 12)
+                    .foregroundStyle(NookTheme.accent(colorScheme))
+                    .frame(width: 22, height: 22)
+                    .background(
+                        RoundedRectangle(cornerRadius: 5)
+                            .fill(NookTheme.accent(colorScheme).opacity(0.10))
+                    )
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("同步到 Apple 提醒事项")
+                        .font(.nook(size: 11, weight: .medium))
+                        .foregroundStyle(.primary)
+                    Text("写入「Nook」列表，Calendar.app 也能看到")
+                        .font(.nook(size: 9))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { remindersEnabled },
+                    set: { newVal in
+                        remindersEnabled = newVal
+                        Task { @MainActor in
+                            if newVal {
+                                await remindersSync?.enable(allTasks: store.tasks)
+                            } else {
+                                remindersSync?.disable()
+                            }
+                            updateSyncStatusText()
+                        }
+                    }
+                ))
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .controlSize(.mini)
+            }
+
+            if !syncStatusText.isEmpty {
+                Text(syncStatusText)
+                    .font(.nook(size: 10))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 5)
+                            .fill(Color.primary.opacity(0.04))
+                    )
+            }
+
+            if remindersEnabled {
+                Button {
+                    Task { @MainActor in
+                        await remindersSync?.fullSync(tasks: store.tasks)
+                        updateSyncStatusText()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 9, weight: .medium))
+                        Text("重新全量同步")
+                            .font(.nook(size: 10, weight: .medium))
+                    }
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 5)
+                            .strokeBorder(NookTheme.line(colorScheme), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+
+            Button {
+                _ = ICSExporter.exportAndOpen(tasks: store.tasks.filter { !$0.completed && $0.dueDate != nil })
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 9, weight: .medium))
+                    Text("批量导出 .ics")
+                        .font(.nook(size: 10, weight: .medium))
+                }
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 5)
+                        .strokeBorder(NookTheme.line(colorScheme), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func updateSyncStatusText() {
+        guard let sync = remindersSync else { syncStatusText = ""; return }
+        switch sync.status {
+        case .disabled: syncStatusText = ""
+        case .unauthorized: syncStatusText = "⚠️ 未授权 — 系统设置 → 隐私 → 提醒事项中允许 Nook"
+        case .syncing: syncStatusText = "⏳ 正在同步..."
+        case .synced(let count): syncStatusText = count == 0 ? "" : "✓ 已同步 \(count) 个任务"
+        case .error(let msg): syncStatusText = "✗ 同步失败：\(msg)"
         }
     }
 
