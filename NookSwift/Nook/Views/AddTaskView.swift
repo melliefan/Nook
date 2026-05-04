@@ -37,7 +37,7 @@ struct AddTaskView: View {
             HStack(spacing: 6) {
                 NookIcon(.plus, size: 16)
                     .foregroundStyle(NookTheme.accent(colorScheme))
-                Text("添加一个待办…")
+                Text("Add a task…")
                     .font(.nook(size: 13))
                     .foregroundStyle(NookTheme.t2(colorScheme))
                 Spacer()
@@ -59,7 +59,7 @@ struct AddTaskView: View {
             HStack(spacing: 8) {
                 NookIcon(.plus, size: 16)
                     .foregroundStyle(NookTheme.accent(colorScheme))
-                TextField("写下待办，Enter 添加", text: $title)
+                TextField("Type your task, Enter to add", text: $title)
                     .textFieldStyle(.plain)
                     .font(.nook(size: 14))
                     .foregroundStyle(NookTheme.t1(colorScheme))
@@ -68,7 +68,7 @@ struct AddTaskView: View {
                     .onExitCommand { resetForm() }
             }
 
-            Text("Esc 取消")
+            Text("Esc to cancel")
                 .font(.nook(size: 10))
                 .foregroundStyle(NookTheme.t4(colorScheme))
                 .padding(.leading, 24)
@@ -111,17 +111,17 @@ struct AddTaskView: View {
 
     private var datePickerContent: some View {
         VStack(spacing: 2) {
-            dateOption("今天", icon: .doc, color: .primary) {
+            dateOption("Today", icon: .doc, color: .primary) {
                 dueDate = todayString(); showDatePicker = false
             }
-            dateOption("明天", icon: .calendar, color: .orange) {
+            dateOption("Tomorrow", icon: .calendar, color: .orange) {
                 dueDate = dateString(daysFromNow: 1); showDatePicker = false
             }
-            dateOption("下周", icon: .calendar, color: .blue) {
+            dateOption("Next week", icon: .calendar, color: .blue) {
                 dueDate = nextWeekString(); showDatePicker = false
             }
             Divider().padding(.horizontal, 8)
-            dateOption("清除日期", icon: .x, color: .red) {
+            dateOption("Clear date", icon: .x, color: .red) {
                 dueDate = nil; showDatePicker = false
             }
         }
@@ -159,7 +159,7 @@ struct AddTaskView: View {
 
     private var tagPickerContent: some View {
         VStack(spacing: 4) {
-            TextField("输入标签名", text: $tagInput)
+            TextField("Tag name", text: $tagInput)
                 .textFieldStyle(.plain)
                 .font(.nook(size: 12))
                 .padding(6)

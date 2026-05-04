@@ -66,30 +66,30 @@ final class Store: ObservableObject {
     /// welcome task can stay short and explain the WHAT, not the HOW.
     private func seedWelcomeTask() {
         let welcomeDesc = """
-        让你的 AI agent（Claude / Cursor 等）直接帮你写待办 —— 你不用切回这个面板手动输入。
+        Let your AI agent (Claude, Cursor, etc.) drop tasks straight into Nook — no need to switch back to this panel and type.
 
-        ✨ 怎么用
-        让 AI 装一次 nooktodo CLI（命令在底部「快捷粘贴」里），之后对 AI 说「帮我记一下 X」，它就会自动把任务写进 Nook，面板实时同步。
+        ✨ How it works
+        Have your AI install the nooktodo CLI once (the command is in Snippets at the bottom). After that, just tell the AI "add a task: X" — it writes to Nook, and this panel updates live.
 
-        📝 例如
-        你：「帮我记一下明天要买牛奶，高优先级」
-        AI 会跑：nooktodo "买牛奶" -p high -d tomorrow
+        📝 Example
+        You: "Add a task: buy milk tomorrow, high priority"
+        AI runs: nooktodo "buy milk" -p high -d tomorrow
         ↓
-        这条任务立即出现在面板里 ✓
+        Task appears here instantly ✓
 
-        装完跟着子任务一项项划掉，最后删掉这条 👋
+        Tick the subtasks below as you go, then delete this whole task 👋
         """
         let task = NookTask(
             id: 1,
-            title: "👋 让 AI 帮你记待办",
+            title: "👋 Let an AI add tasks for you",
             description: welcomeDesc,
             completed: false,
             priority: .none,
             tags: [],
             subtasks: [
-                Subtask(id: 1, title: "从底部「快捷粘贴」复制【安装 nooktodo】命令", completed: false),
-                Subtask(id: 2, title: "让 AI agent 帮你执行刚复制的命令", completed: false),
-                Subtask(id: 3, title: "对 AI 说「帮我记一下 XX」，看 Nook 是否自动出现", completed: false),
+                Subtask(id: 1, title: "Copy the [Install nooktodo] snippet from the bottom rail", completed: false),
+                Subtask(id: 2, title: "Ask any AI agent (Claude / Cursor) to run that command", completed: false),
+                Subtask(id: 3, title: "Tell the AI \"add a task: XX\" and watch it appear here", completed: false),
             ],
             nextSubId: 4,
             dueDate: nil,
@@ -101,16 +101,16 @@ final class Store: ObservableObject {
         nextId = 2
 
         // Starter snippets — give users one-click access to install + AI prompts
-        let installCmd = #"NOOK=$(find /Applications ~/Applications -name Nook.app -maxdepth 2 2>/dev/null | head -1) && mkdir -p ~/.local/bin && ln -sf "$NOOK/Contents/Resources/nooktodo" ~/.local/bin/nooktodo && echo "✓ nooktodo 已安装"#
+        let installCmd = #"NOOK=$(find /Applications ~/Applications -name Nook.app -maxdepth 2 2>/dev/null | head -1) && mkdir -p ~/.local/bin && ln -sf "$NOOK/Contents/Resources/nooktodo" ~/.local/bin/nooktodo && echo "✓ nooktodo installed"#
         let now = ISO8601DateFormatter().string(from: Date())
         snippets = [
-            Snippet(id: 1, label: "📦 安装 nooktodo（让 AI 跑这条）",
+            Snippet(id: 1, label: "📦 Install nooktodo (have AI run this)",
                     value: installCmd, type: "command", createdAt: now),
-            Snippet(id: 2, label: "💡 给 AI 的提示模板",
-                    value: "帮我记一下 X，X 优先级，明天要做",
+            Snippet(id: 2, label: "💡 AI prompt template",
+                    value: "Add a task: X, priority high, due tomorrow",
                     type: "text", createdAt: now),
-            Snippet(id: 3, label: "📝 nooktodo 命令格式",
-                    value: #"nooktodo "标题" -t 标签 -p high -d tomorrow"#,
+            Snippet(id: 3, label: "📝 nooktodo command format",
+                    value: #"nooktodo "title" -t tag -p high -d tomorrow"#,
                     type: "command", createdAt: now),
         ]
         nextSnippetId = 4

@@ -176,7 +176,7 @@ func testTaskPriority() {
     checkEqual(NookTask.Priority.low.color, "#34C759", "Low color")
     checkEqual(NookTask.Priority.none.color, "#8E8E93", "None color")
 
-    checkEqual(NookTask.Priority.high.label, "高优先级", "High label")
+    checkEqual(NookTask.Priority.high.label, "High", "High label")
 
     // Raw value encoding
     checkEqual(NookTask.Priority.high.rawValue, "high", "High raw value")
@@ -213,11 +213,11 @@ func testDateFormatting() {
                  createdAt: "2026-01-01T00:00:00Z", completedAt: nil)
     }
 
-    checkEqual(makeTask(due: todayStr).formattedDueDate, "今天", "Today formatted")
-    checkEqual(makeTask(due: tomorrowStr).formattedDueDate, "明天", "Tomorrow formatted")
-    checkEqual(makeTask(due: yesterdayStr).formattedDueDate, "昨天", "Yesterday formatted")
-    checkEqual(makeTask(due: threeDaysAgoStr).formattedDueDate, "3天前", "3 days ago formatted")
-    checkEqual(makeTask(due: inFiveDaysStr).formattedDueDate, "5天后", "5 days from now formatted")
+    checkEqual(makeTask(due: todayStr).formattedDueDate, "Today", "Today formatted")
+    checkEqual(makeTask(due: tomorrowStr).formattedDueDate, "Tomorrow", "Tomorrow formatted")
+    checkEqual(makeTask(due: yesterdayStr).formattedDueDate, "Yesterday", "Yesterday formatted")
+    checkEqual(makeTask(due: threeDaysAgoStr).formattedDueDate, "3d ago", "3 days ago formatted")
+    checkEqual(makeTask(due: inFiveDaysStr).formattedDueDate, "in 5d", "5 days from now formatted")
     checkNil(makeTask(due: nil).formattedDueDate, "No due date = nil")
     checkNil(makeTask(due: "invalid").formattedDueDate, "Invalid date = nil")
 }

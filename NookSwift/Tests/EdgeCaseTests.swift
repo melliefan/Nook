@@ -121,29 +121,31 @@ func testDateFormattingEdgeCases() {
     let in8Str = f.string(from: in8Days)
     let result8 = makeTask(due: in8Str).formattedDueDate
     checkNotNil(result8, "8 days from now has formatted date")
-    check(result8 != "8天后", "8 days → shows date format, not '8天后'")
+    check(result8 != "in 8d", "8 days → shows date format, not 'in 8d'")
 
-    // Exactly 7 days from now → "7天后"
+    // Exactly 7 days from now → "in 7d"
     let in7Days = cal.date(byAdding: .day, value: 7, to: Date())!
     let in7Str = f.string(from: in7Days)
-    checkEqual(makeTask(due: in7Str).formattedDueDate, "7天后", "7 days → '7天后'")
+    checkEqual(makeTask(due: in7Str).formattedDueDate, "in 7d", "7 days → 'in 7d'")
 
-    // 2 days from now → "2天后"
+    // 2 days from now → "in 2d"
     let in2Days = cal.date(byAdding: .day, value: 2, to: Date())!
     let in2Str = f.string(from: in2Days)
-    checkEqual(makeTask(due: in2Str).formattedDueDate, "2天后", "2 days → '2天后'")
+    checkEqual(makeTask(due: in2Str).formattedDueDate, "in 2d", "2 days → 'in 2d'")
 
-    // 30 days ago → "30天前"
+    // 30 days ago → "30d ago"
     let ago30 = cal.date(byAdding: .day, value: -30, to: Date())!
     let ago30Str = f.string(from: ago30)
-    checkEqual(makeTask(due: ago30Str).formattedDueDate, "30天前", "30 days ago → '30天前'")
+    checkEqual(makeTask(due: ago30Str).formattedDueDate, "30d ago", "30 days ago → '30d ago'")
 
-    // Far future (next year) → "M月d日" format
+    // Far future (next year) → "MMM d" format (e.g. "May 4")
     let farFuture = cal.date(byAdding: .month, value: 3, to: Date())!
     let farStr = f.string(from: farFuture)
     let farResult = makeTask(due: farStr).formattedDueDate
     checkNotNil(farResult, "Far future date has result")
-    check(farResult?.contains("月") == true, "Far future shows month format")
+    // Should contain a 3-letter month abbreviation (Jan/Feb/Mar/...)
+    let hasMonthAbbr = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].contains { farResult?.contains($0) == true }
+    check(hasMonthAbbr, "Far future shows month abbreviation")
 
     // Invalid date strings
     checkNil(makeTask(due: "invalid").formattedDueDate, "Invalid string → nil")

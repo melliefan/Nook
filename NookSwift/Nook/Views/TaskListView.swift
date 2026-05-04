@@ -97,7 +97,7 @@ struct TaskListView: View {
                     NookIcon(.chevron, size: 10)
                         .rotationEffect(.degrees(completedCollapsed ? 0 : 90))
                         .foregroundStyle(NookTheme.t4(colorScheme))
-                    Text("已完成")
+                    Text("Completed")
                         .font(.nook(size: 11, weight: .semibold))
                         .foregroundStyle(NookTheme.t3(colorScheme))
                     Text("\(completedTasks.count)")
@@ -145,10 +145,10 @@ struct TaskListView: View {
                     .foregroundStyle(.quaternary)
             }
             VStack(spacing: 4) {
-                Text("收件箱空空如也")
+                Text("Inbox is empty")
                     .font(.nook(size: 14, weight: .medium))
                     .foregroundStyle(NookTheme.t2(colorScheme))
-                Text("点右上角 + 添加待办，或让 Claude 帮你记一笔")
+                Text("Click + to add a task — or let an AI agent jot one")
                     .font(.nook(size: 11))
                     .foregroundStyle(NookTheme.t4(colorScheme))
             }
@@ -263,7 +263,7 @@ struct TaskRowView: View {
                             draggingTaskId = task.id
                             return NSItemProvider(object: "\(task.id)" as NSString)
                         }
-                        .help("拖拽排序")
+                        .help("Drag to reorder")
                 }
                 Button { onDetail(task.id) } label: {
                     NookIcon(.pen, size: 12)
@@ -295,14 +295,14 @@ struct TaskRowView: View {
         )
         .onHover { isHovering = $0 }
         .contextMenu {
-            Button("查看详情") { onDetail(task.id) }
-            Menu("优先级") {
+            Button("View details") { onDetail(task.id) }
+            Menu("Priority") {
                 ForEach(NookTask.Priority.allCases, id: \.self) { p in
                     Button(p.label) { store.updateTask(task.id, priority: p) }
                 }
             }
             Divider()
-            Button("删除", role: .destructive) { store.deleteTask(task.id) }
+            Button("Delete", role: .destructive) { store.deleteTask(task.id) }
         }
     }
 
@@ -365,7 +365,7 @@ struct TaskRowView: View {
 
                 if hasSubs {
                     let done = task.subtasks.filter(\.completed).count
-                    Text("子任务 \(done)/\(task.subtasks.count)")
+                    Text("Subtasks \(done)/\(task.subtasks.count)")
                         .font(.nook(size: 10, weight: .medium))
                         .foregroundStyle(NookTheme.t3(colorScheme))
                         .lineLimit(1)
@@ -425,7 +425,7 @@ struct TaskRowView: View {
                     RoundedRectangle(cornerRadius: 3)
                         .strokeBorder(NookTheme.t4(colorScheme), lineWidth: 1.5)
                         .frame(width: 13, height: 13)
-                    TextField("输入子任务", text: $newSubtaskTitle)
+                    TextField("New subtask", text: $newSubtaskTitle)
                         .textFieldStyle(.plain)
                         .font(.nook(size: 12))
                         .onSubmit {
@@ -440,7 +440,7 @@ struct TaskRowView: View {
                 Button { isAddingSubtask = true } label: {
                     HStack(spacing: 4) {
                         NookIcon(.plus, size: 10)
-                        Text("添加子任务")
+                        Text("Add subtask")
                             .font(.nook(size: 11))
                     }
                     .foregroundStyle(NookTheme.t3(colorScheme))

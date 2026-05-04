@@ -11,19 +11,19 @@ struct SettingsPopoverView: View {
     private var remindersSync: RemindersSync? { AppDelegate.shared?.remindersSync }
 
     private let corners: [(NookSettings.CornerTrigger, String)] = [
-        (.topLeft, "左上"), (.topRight, "右上"),
-        (.bottomLeft, "左下"), (.bottomRight, "右下"),
+        (.topLeft, "Top Left"), (.topRight, "Top Right"),
+        (.bottomLeft, "Bottom Left"), (.bottomRight, "Bottom Right"),
     ]
 
     private let appearanceOptions: [(String, String)] = [
-        ("system", "跟随系统"),
-        ("light", "浅色"),
-        ("dark", "深色"),
+        ("system", "System"),
+        ("light", "Light"),
+        ("dark", "Dark"),
     ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Nook 偏好")
+            Text("Appearance")
                 .font(.nook(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
 
@@ -51,7 +51,7 @@ struct SettingsPopoverView: View {
                     .fill(Color.primary.opacity(0.04))
             )
 
-            Text("热角")
+            Text("Hot Corner")
                 .font(.nook(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
@@ -82,13 +82,13 @@ struct SettingsPopoverView: View {
                 }
             }
 
-            Text("命令行工具")
+            Text("Command Line")
                 .font(.nook(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("装好后 Claude 等 AI 助手就能帮你记待办。把下面命令贴到 Terminal 跑一次即可。")
+                Text("Install once, then any AI agent (Claude, Cursor, etc.) can add tasks for you. Paste the command into Terminal and run it.")
                     .font(.nook(size: 11))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -111,7 +111,7 @@ struct SettingsPopoverView: View {
                 } label: {
                     HStack(spacing: 5) {
                         NookIcon(copiedCli ? .checkmark : .copy, size: 10)
-                        Text(copiedCli ? "已复制到剪贴板" : "一键复制安装命令")
+                        Text(copiedCli ? "Copied to clipboard" : "Copy install command")
                             .font(.nook(size: 11, weight: .medium))
                     }
                     .foregroundStyle(NookTheme.tagOnFg(colorScheme))
@@ -125,8 +125,8 @@ struct SettingsPopoverView: View {
                 .buttonStyle(.plain)
             }
 
-            // ──── 日历集成 ────
-            Text("日历集成")
+            // ──── Calendar / Reminders ────
+            Text("Calendar Sync")
                 .font(.nook(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
@@ -141,7 +141,7 @@ struct SettingsPopoverView: View {
             } label: {
                 HStack(spacing: 6) {
                     NookIcon(.x, size: 9)
-                    Text("退出 Nook")
+                    Text("Quit Nook")
                         .font(.nook(size: 11, weight: .medium))
                 }
                 .foregroundStyle(.red.opacity(0.85))
@@ -153,7 +153,7 @@ struct SettingsPopoverView: View {
                 )
             }
             .buttonStyle(.plain)
-            .help("彻底关闭 Nook 进程，热角和 CLI 都不再工作（重新打开 Nook.app 即可恢复）")
+            .help("Quits Nook completely. Hot corner and CLI stop working until you reopen Nook.app.")
         }
         .padding(14)
         .frame(width: 240)
@@ -166,7 +166,7 @@ struct SettingsPopoverView: View {
         }
     }
 
-    // MARK: - 日历集成 section
+    // MARK: - Calendar / Reminders section
 
     @ViewBuilder
     private var calendarIntegrationSection: some View {
@@ -180,10 +180,10 @@ struct SettingsPopoverView: View {
                             .fill(NookTheme.accent(colorScheme).opacity(0.10))
                     )
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("同步到 Apple 提醒事项")
+                    Text("Sync to Apple Reminders")
                         .font(.nook(size: 11, weight: .medium))
                         .foregroundStyle(.primary)
-                    Text("写入「Nook」列表，Calendar.app 也能看到")
+                    Text("Writes to the \"Nook\" list. Visible in Calendar.app too.")
                         .font(.nook(size: 9))
                         .foregroundStyle(.secondary)
                 }
@@ -230,7 +230,7 @@ struct SettingsPopoverView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.clockwise")
                             .font(.system(size: 9, weight: .medium))
-                        Text("重新全量同步")
+                        Text("Re-sync everything")
                             .font(.nook(size: 10, weight: .medium))
                     }
                     .foregroundStyle(.secondary)
@@ -251,18 +251,18 @@ struct SettingsPopoverView: View {
         guard let sync = remindersSync else { syncStatusText = ""; return }
         switch sync.status {
         case .disabled: syncStatusText = ""
-        case .unauthorized: syncStatusText = "⚠️ 未授权 — 系统设置 → 隐私 → 提醒事项中允许 Nook"
-        case .syncing: syncStatusText = "⏳ 正在同步..."
-        case .synced(let count): syncStatusText = count == 0 ? "" : "✓ 已同步 \(count) 个任务"
-        case .error(let msg): syncStatusText = "✗ 同步失败：\(msg)"
+        case .unauthorized: syncStatusText = "⚠️ Not authorized — allow Nook in System Settings → Privacy → Reminders"
+        case .syncing: syncStatusText = "⏳ Syncing..."
+        case .synced(let count): syncStatusText = count == 0 ? "" : "✓ Synced \(count) task\(count == 1 ? "" : "s")"
+        case .error(let msg): syncStatusText = "✗ Sync failed: \(msg)"
         }
     }
 
     /// Display preview — short version of the actual command for visual hint.
     private var installCommandPreview: String {
         """
-        # 自动找 Nook.app + 选 PATH 里的目录安装
-        # 必要时还会把 ~/.local/bin 写进 .zshrc
+        # Auto-finds Nook.app + picks a PATH dir to install into
+        # Will append ~/.local/bin to .zshrc if needed
         bash -c "$(...auto-install script...)"
         """
     }
@@ -275,29 +275,29 @@ struct SettingsPopoverView: View {
     private func copyInstallCommand() {
         let cmd = #"""
         NOOK=$(find /Applications ~/Applications -name Nook.app -maxdepth 2 2>/dev/null | head -1)
-        if [ -z "$NOOK" ]; then echo "✗ 找不到 Nook.app — 请先把它拖到 /Applications"; exit 1; fi
+        if [ -z "$NOOK" ]; then echo "✗ Can't find Nook.app — drag it to /Applications first"; exit 1; fi
         SCRIPT="$NOOK/Contents/Resources/nooktodo"
-        # 1. 优先找 PATH 里已存在且可写的目录
+        # 1. Prefer a writable dir already in PATH
         TARGET=""
         for d in /opt/homebrew/bin /usr/local/bin; do
           if echo ":$PATH:" | grep -q ":$d:" && [ -w "$d" ] 2>/dev/null; then
             TARGET="$d"; break
           fi
         done
-        # 2. 如果 PATH 里没现成可写目录，用 ~/.local/bin 并自动加进 .zshrc
+        # 2. Fall back to ~/.local/bin and add it to .zshrc if missing
         if [ -z "$TARGET" ]; then
           TARGET="$HOME/.local/bin"
           mkdir -p "$TARGET"
           RC="$HOME/.zshrc"; [ -n "$BASH_VERSION" ] && RC="$HOME/.bashrc"
           if ! echo ":$PATH:" | grep -q ":$TARGET:"; then
             { echo ""; echo "# Added by Nook"; echo "export PATH=\"\$HOME/.local/bin:\$PATH\""; } >> "$RC"
-            echo "✓ 已把 ~/.local/bin 加入 PATH（写入 $RC，新开 Terminal 即可生效）"
+            echo "✓ Added ~/.local/bin to PATH (in $RC; takes effect in new Terminal)"
           fi
         fi
         ln -sf "$SCRIPT" "$TARGET/nooktodo"
         export PATH="$TARGET:$PATH"
-        echo "✓ nooktodo 已安装到 $TARGET/nooktodo"
-        echo "✓ 当前 shell 立即可用：nooktodo 'test'"
+        echo "✓ nooktodo installed to $TARGET/nooktodo"
+        echo "✓ Available now: nooktodo 'test'"
         """#
         let pb = NSPasteboard.general
         pb.clearContents()

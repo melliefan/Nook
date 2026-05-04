@@ -13,10 +13,10 @@ struct NookSettings: Codable, Equatable {
 
         var label: String {
             switch self {
-            case .topLeft: "左上"
-            case .topRight: "右上"
-            case .bottomLeft: "左下"
-            case .bottomRight: "右下"
+            case .topLeft: "Top Left"
+            case .topRight: "Top Right"
+            case .bottomLeft: "Bottom Left"
+            case .bottomRight: "Bottom Right"
             }
         }
 

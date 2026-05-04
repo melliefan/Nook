@@ -62,7 +62,7 @@ struct TagFilterBarView: View {
                         else if hoveredTag == tag { hoveredTag = nil }
                     }
                     .contextMenu {
-                        Button("删除标签", role: .destructive) {
+                        Button("Delete tag", role: .destructive) {
                             if filterTag == tag { filterTag = "" }
                             store.deleteTag(tag)
                         }
@@ -77,7 +77,7 @@ struct TagFilterBarView: View {
 
                 if isExpanded || !hasOverflow {
                     if showAddInput {
-                        TextField("标签名", text: $newTagName)
+                        TextField("Tag name", text: $newTagName)
                             .textFieldStyle(.plain)
                             .font(.nook(size: 11))
                             .frame(width: 60, height: 24)
@@ -91,7 +91,7 @@ struct TagFilterBarView: View {
                         } label: {
                             HStack(spacing: 4) {
                                 NookIcon(.plus, size: 12)
-                                Text("标签")
+                                Text("Tag")
                                     .font(.nook(size: 11, weight: .medium))
                             }
                             .foregroundStyle(NookTheme.t2(colorScheme))
@@ -104,7 +104,7 @@ struct TagFilterBarView: View {
                 }
 
                 if hasOverflow && isExpanded {
-                    moreOrFold(label: "收起") {
+                    moreOrFold(label: "Less") {
                         withAnimation(.easeInOut(duration: 0.15)) { isExpanded = false }
                     }
                 }
@@ -162,7 +162,7 @@ struct TagFilterBarView: View {
                         .buttonStyle(.plain)
                         .opacity(isHovered ? 1 : 0)
                         .allowsHitTesting(isHovered)
-                        .help("删除标签")
+                        .help("Delete tag")
                     }
                 }
             }
@@ -223,7 +223,7 @@ private struct InlineTagColorPicker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Text("设置标签颜色")
+                Text("Tag color")
                     .font(.nook(size: 11, weight: .semibold))
                     .foregroundStyle(NookTheme.t2(colorScheme))
                 Text(tag)

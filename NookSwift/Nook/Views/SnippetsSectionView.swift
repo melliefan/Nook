@@ -52,7 +52,7 @@ struct SnippetsSectionView: View {
                 .foregroundStyle(NookTheme.t4(colorScheme))
             NookIcon(.clip, size: 13)
                 .foregroundStyle(NookTheme.t4(colorScheme))
-            Text("快捷粘贴")
+            Text("Snippets")
                 .font(.nook(size: 11, weight: .semibold))
                 .foregroundStyle(NookTheme.t3(colorScheme))
             if !store.snippets.isEmpty {
@@ -83,7 +83,7 @@ struct SnippetsSectionView: View {
     private var snippetsList: some View {
         VStack(spacing: 1) {
             if store.snippets.isEmpty {
-                Text("点击 + 添加常用命令或密码")
+                Text("Click + to save text you copy often")
                     .font(.nook(size: 11))
                     .foregroundStyle(NookTheme.t4(colorScheme).opacity(0.5))
                     .padding(.vertical, 8)
@@ -104,7 +104,7 @@ struct SnippetsSectionView: View {
                 .font(.system(size: 10, weight: .medium, design: .monospaced))
                 .foregroundStyle(NookTheme.t4(colorScheme))
                 .frame(width: 12, alignment: .trailing)
-            Text(snippet.value.isEmpty ? "(空)" : snippet.value)
+            Text(snippet.value.isEmpty ? "(empty)" : snippet.value)
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(NookTheme.t2(colorScheme))
                 .lineLimit(1)
@@ -144,7 +144,7 @@ struct SnippetsSectionView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("删除")
+                .help("Delete")
             }
             .opacity(isHovered ? 1 : 0)
             .allowsHitTesting(isHovered)
@@ -160,7 +160,7 @@ struct SnippetsSectionView: View {
 
     private var addForm: some View {
         VStack(spacing: 4) {
-            TextField("粘贴或输入内容，回车保存", text: $inputValue)
+            TextField("Paste or type, then Enter to save", text: $inputValue)
                 .textFieldStyle(.plain)
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundStyle(NookTheme.t2(colorScheme))
@@ -171,11 +171,11 @@ struct SnippetsSectionView: View {
 
             HStack {
                 Spacer()
-                Button("取消") { cancelForm() }
+                Button("Cancel") { cancelForm() }
                     .font(.nook(size: 11))
                     .foregroundStyle(NookTheme.t4(colorScheme))
                     .buttonStyle(.plain)
-                Button("保存") { saveSnippet() }
+                Button("Save") { saveSnippet() }
                     .font(.nook(size: 11, weight: .medium))
                     .foregroundStyle(NookTheme.tagOnFg(colorScheme))
                     .padding(.horizontal, 10)
@@ -208,7 +208,7 @@ struct SnippetsSectionView: View {
     private func copyToClipboard(_ snippet: Snippet) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(snippet.value, forType: .string)
-        withAnimation(.easeInOut(duration: 0.2)) { toastMessage = "已复制" }
+        withAnimation(.easeInOut(duration: 0.2)) { toastMessage = "Copied" }
         // Cancel any pending dismiss from a previous copy — otherwise rapid clicks
         // cause the older timer to clear the new toast prematurely.
         toastDismiss?.cancel()

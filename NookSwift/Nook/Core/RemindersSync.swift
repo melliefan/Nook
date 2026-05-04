@@ -233,14 +233,14 @@ final class RemindersSync: ObservableObject {
         if !task.description.isEmpty { parts.append(task.description) }
         if !task.subtasks.isEmpty {
             parts.append("")
-            parts.append("子任务:")
+            parts.append("Subtasks:")
             for s in task.subtasks {
                 parts.append("  \(s.completed ? "✓" : "○") \(s.title)")
             }
         }
         if !task.tags.isEmpty {
             parts.append("")
-            parts.append("Nook 标签: \(task.tags.joined(separator: ", "))")
+            parts.append("Tags: \(task.tags.joined(separator: ", "))")
         }
         return parts.isEmpty ? nil : parts.joined(separator: "\n")
     }

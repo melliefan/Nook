@@ -70,12 +70,12 @@ struct TaskDetailView: View {
             .buttonStyle(.plain)
             .frame(width: 36, alignment: .leading)
 
-            Text(isNew ? "新增任务" : "编辑任务")
+            Text(isNew ? "New Task" : "Edit Task")
                 .font(.nook(size: 12, weight: .semibold))
                 .foregroundStyle(NookTheme.t1(colorScheme))
                 .frame(maxWidth: .infinity)
 
-            Button("保存") { saveAndBack() }
+            Button("Save") { saveAndBack() }
                 .font(.nook(size: 12, weight: .semibold))
                 .foregroundStyle(NookTheme.accent(colorScheme))
                 .buttonStyle(.plain)
@@ -88,7 +88,7 @@ struct TaskDetailView: View {
 
     private var editorFields: some View {
         VStack(alignment: .leading, spacing: 8) {
-            TextField("写下待办", text: $editTitle, axis: .vertical)
+            TextField("Type your task", text: $editTitle, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.nook(size: 18, weight: .semibold))
                 .foregroundStyle(NookTheme.t1(colorScheme))
@@ -96,7 +96,7 @@ struct TaskDetailView: View {
                 .focused($titleFocused)
                 .onSubmit { saveChanges() }
 
-            TextField("备注，可不填", text: $editDesc, axis: .vertical)
+            TextField("Notes (optional)", text: $editDesc, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.nook(size: 12))
                 .foregroundStyle(NookTheme.t3(colorScheme))
@@ -165,7 +165,7 @@ struct TaskDetailView: View {
 
     private var tagSection: some View {
         HStack(alignment: .top, spacing: 8) {
-            Text("标签")
+            Text("Tags")
                 .font(.nook(size: 12, weight: .medium))
                 .foregroundStyle(NookTheme.t3(colorScheme))
                 .frame(width: 42, alignment: .leading)
@@ -180,7 +180,7 @@ struct TaskDetailView: View {
                 } label: {
                     HStack(spacing: 4) {
                         NookIcon(.plus, size: 12)
-                        Text("添加")
+                        Text("Add")
                             .font(.nook(size: 11, weight: .medium))
                     }
                     .foregroundStyle(NookTheme.t4(colorScheme))
@@ -209,7 +209,7 @@ struct TaskDetailView: View {
             HStack(spacing: 8) {
                 NookIcon(.check, size: 15)
                     .foregroundStyle(NookTheme.t3(colorScheme))
-                Text("子任务")
+                Text("Subtasks")
                     .font(.nook(size: 12, weight: .medium))
                     .foregroundStyle(NookTheme.t3(colorScheme))
                 let count = displayedSubtasks.count
@@ -228,7 +228,7 @@ struct TaskDetailView: View {
 
             HStack(spacing: 6) {
                 NookIcon(.plus, size: 12)
-                TextField("添加子任务", text: $newSubtaskTitle)
+                TextField("Add subtask", text: $newSubtaskTitle)
                     .textFieldStyle(.plain)
                     .font(.nook(size: 12))
                     .onSubmit { addSubtask() }
@@ -248,12 +248,12 @@ struct TaskDetailView: View {
     }
 
     private var formattedDueDate: String {
-        guard let selectedDueDate else { return "选择日期" }
+        guard let selectedDueDate else { return "Select date" }
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        guard let date = formatter.date(from: selectedDueDate) else { return "选择日期" }
-        formatter.locale = Locale(identifier: "zh_CN")
-        formatter.dateFormat = "M月d日"
+        guard let date = formatter.date(from: selectedDueDate) else { return "Select date" }
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateFormat = "MMM d"
         return formatter.string(from: date)
     }
 
@@ -394,7 +394,7 @@ private struct CompactCalendarPicker: View {
     let colorScheme: ColorScheme
 
     private let calendar = Calendar.current
-    private let weekdays = ["日", "一", "二", "三", "四", "五", "六"]
+    private let weekdays = ["S", "M", "T", "W", "T", "F", "S"]
 
     var body: some View {
         VStack(spacing: 8) {
@@ -453,7 +453,7 @@ private struct CompactCalendarPicker: View {
             }
 
             HStack {
-                Button("清除日期") {
+                Button("Clear date") {
                     selectedDueDate = nil
                     isPresented = false
                 }
@@ -476,8 +476,8 @@ private struct CompactCalendarPicker: View {
 
     private var monthTitle: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "zh_CN")
-        formatter.dateFormat = "yyyy年M月"
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateFormat = "MMMM yyyy"
         return formatter.string(from: pickerMonth)
     }
 
@@ -610,7 +610,7 @@ private struct TagSelectorOverlay: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("添加标签")
+                Text("Add tag")
                     .font(.nook(size: 13, weight: .semibold))
                     .foregroundStyle(NookTheme.t1(colorScheme))
                 Spacer()
@@ -628,7 +628,7 @@ private struct TagSelectorOverlay: View {
             HStack(spacing: 7) {
                 NookIcon(.tag, size: 12)
                     .foregroundStyle(NookTheme.t4(colorScheme))
-                TextField("搜索或输入新标签", text: $searchText)
+                TextField("Search or create", text: $searchText)
                     .textFieldStyle(.plain)
                     .font(.nook(size: 12))
                     .onSubmit { commitCreateIfNeeded() }
@@ -660,12 +660,12 @@ private struct TagSelectorOverlay: View {
 
             // Footer — no top divider, just generous spacing
             HStack {
-                Text(selectedTags.isEmpty ? "回车创建" : "\(selectedTags.count) 个已选")
+                Text(selectedTags.isEmpty ? "Enter to create" : "\(selectedTags.count) selected")
                     .font(.nook(size: 10))
                     .foregroundStyle(NookTheme.t4(colorScheme))
                 Spacer()
                 Button { isPresented = false } label: {
-                    Text("取消")
+                    Text("Cancel")
                         .font(.nook(size: 12, weight: .medium))
                         .foregroundStyle(NookTheme.t1(colorScheme))
                         .padding(.horizontal, 14)
@@ -678,7 +678,7 @@ private struct TagSelectorOverlay: View {
                     commitCreateIfNeeded()
                     isPresented = false
                 } label: {
-                    Text("完成")
+                    Text("Done")
                         .font(.nook(size: 12, weight: .semibold))
                         .foregroundStyle(NookTheme.tagOnFg(colorScheme))
                         .padding(.horizontal, 14)
@@ -708,7 +708,7 @@ private struct TagSelectorOverlay: View {
                         .foregroundStyle(NookTheme.accent(colorScheme))
                         .frame(width: 14)
                     HStack(spacing: 4) {
-                        Text("创建")
+                        Text("Create")
                             .font(.nook(size: 12, weight: .medium))
                             .foregroundStyle(NookTheme.accent(colorScheme))
                         Text("\"\(trimmedQuery)\"")
@@ -725,7 +725,7 @@ private struct TagSelectorOverlay: View {
                             .frame(width: 10, height: 10)
                     }
                     .buttonStyle(.plain)
-                    .help("点击换色")
+                    .help("Change color")
                 }
                 .padding(.horizontal, 10)
                 .frame(height: 32)
@@ -776,7 +776,7 @@ private struct TagSelectorOverlay: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("点击改色")
+                .help("Change color")
 
                 // Name + count zone — clickable to select/deselect
                 HStack(spacing: 6) {
@@ -804,7 +804,7 @@ private struct TagSelectorOverlay: View {
                         .buttonStyle(.plain)
                         .opacity(hoveredRowTag == tag && !isEditing ? 1 : 0)
                         .allowsHitTesting(hoveredRowTag == tag && !isEditing)
-                        .help("删除标签")
+                        .help("Delete tag")
                     }
                     .frame(width: 18, alignment: .trailing)
                 }
@@ -830,7 +830,7 @@ private struct TagSelectorOverlay: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .help("删除标签")
+                    .help("Delete tag")
                 } else if isSelected {
                     Circle()
                         .fill(NookTheme.accent(colorScheme))

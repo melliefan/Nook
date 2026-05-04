@@ -150,8 +150,8 @@ struct HeaderView: View {
     private var dateTitle: String {
         let d = Date()
         let f = DateFormatter()
-        f.locale = Locale(identifier: "zh_CN")
-        f.dateFormat = "M月d日 · EEEE"
+        f.locale = Locale(identifier: "en_US")
+        f.dateFormat = "MMM d · EEEE"
         return f.string(from: d)
     }
 
@@ -159,7 +159,7 @@ struct HeaderView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 0) {
                 HStack(spacing: 7) {
-                    Text("收集箱")
+                    Text("Inbox")
                         .font(.nook(size: 22, weight: .heavy))
                         .foregroundStyle(NookTheme.t1(colorScheme))
                         .tracking(-0.45)
@@ -200,7 +200,7 @@ struct HeaderView: View {
                         panelController.isPinned = false
                         panelController.hide()
                     }
-                    .help("收起面板（Nook 继续在后台运行，撞热角可再呼出。要彻底退出请去设置）")
+                    .help("Hide panel (Nook keeps running, hot corner brings it back. Quit fully via Settings.)")
                 }
             }
         }
@@ -259,11 +259,11 @@ struct SortMenuView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private let options: [(key: String, label: String, icon: NookIconName)] = [
-        ("custom", "自定义排序", .drag),
-        ("priority", "按优先级", .flag),
-        ("dueDate", "按日期", .calendar),
-        ("title", "按标题", .doc),
-        ("created", "按创建时间", .clock),
+        ("custom", "Manual order", .drag),
+        ("priority", "By priority", .flag),
+        ("dueDate", "By due date", .calendar),
+        ("title", "By title", .doc),
+        ("created", "By date created", .clock),
     ]
 
     var body: some View {
@@ -314,7 +314,7 @@ struct AttributionView: View {
             Text("·")
                 .font(.nook(size: 8))
                 .foregroundStyle(NookTheme.t4(colorScheme))
-            Text("按热角唤起")
+            Text("Triggered by hot corner")
                 .font(.nook(size: 10))
                 .foregroundStyle(NookTheme.t3(colorScheme))
             Spacer()

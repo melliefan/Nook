@@ -24,10 +24,10 @@ struct NookTask: Codable, Identifiable, Equatable {
         case high, medium, low, none
         var label: String {
             switch self {
-            case .high: "高优先级"
-            case .medium: "中优先级"
-            case .low: "低优先级"
-            case .none: "无优先级"
+            case .high: "High"
+            case .medium: "Medium"
+            case .low: "Low"
+            case .none: "None"
             }
         }
         var color: String {
@@ -67,14 +67,15 @@ struct NookTask: Codable, Identifiable, Equatable {
         let target = cal.startOfDay(for: date)
         let diff = cal.dateComponents([.day], from: today, to: target).day ?? 0
         switch diff {
-        case 0: return "今天"
-        case 1: return "明天"
-        case -1: return "昨天"
-        case ..<(-1): return "\(abs(diff))天前"
-        case 2...7: return "\(diff)天后"
+        case 0: return "Today"
+        case 1: return "Tomorrow"
+        case -1: return "Yesterday"
+        case ..<(-1): return "\(abs(diff))d ago"
+        case 2...7: return "in \(diff)d"
         default:
             let f = DateFormatter()
-            f.dateFormat = "M月d日"
+            f.dateFormat = "MMM d"
+            f.locale = Locale(identifier: "en_US")
             return f.string(from: date)
         }
     }
