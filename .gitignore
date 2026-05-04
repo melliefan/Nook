@@ -61,3 +61,6 @@ website/assets/source-recordings/
 
 # seed-demo backups (real task snapshots while running demos)
 **/_demo_backups/
+
+# verify-ui screenshot output (本地视觉校验产物)
+verification/

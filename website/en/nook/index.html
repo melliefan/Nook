@@ -48,7 +48,7 @@
       <span>melliefan</span>
     </a>
     <nav class="site-nav" aria-label="Primary">
-      <a class="nav-link" href="#features">Features</a>
+      <a class="nav-link" href="#showcase">Features</a>
       <a class="nav-link" href="#download">Download</a>
       <a class="nav-link" href="https://github.com/melliefan/nook" rel="noopener">GitHub</a>
       <span class="lang-switch" aria-label="Language">
@@ -117,80 +117,61 @@
   </section>
 
 
-  <!-- ============ FEATURES ============ -->
-  <section class="container section reveal" id="features">
+  <!-- ============ SHOWCASE ============ -->
+  <section class="container section reveal" id="showcase">
     <div class="section-head">
-      <span class="eyebrow">Features</span>
+      <span class="eyebrow">See Nook in motion</span>
       <h2 class="h1">Small. Native. Out of the way.</h2>
     </div>
 
-    <div class="features">
+    <article class="showcase-block reveal">
+      <div class="showcase-block__copy">
+        <span class="showcase-block__eyebrow">Nook v1.0 · Main panel</span>
+        <h3 class="h2 showcase-block__title">A whole day, at a glance.</h3>
+        <p class="showcase-block__body">Nine tasks, four tags, completed ones tucked below — this is what Nook looks like during your day.</p>
+        <p class="showcase-block__body">Priority flags, due dates, sub-task progress: information density tuned just right. Overdue items turn red so you don't miss them.</p>
+      </div>
+      <div class="showcase-block__visual">
+        <img src="../../assets/images/screenshot-light-1.png" alt="Main panel with a populated task list" loading="lazy">
+      </div>
+    </article>
 
-      <article class="feature">
-        <div class="feature__ico" aria-hidden="true">
-          <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4 24 13.5l-9 9-10-1V11.5L14.5 4Z"/><circle cx="11" cy="11" r="1.6"/></svg>
-        </div>
-        <h3 class="h3">Tags &amp; Filters</h3>
-        <p class="feature__desc">Color-coded tags. Filter by project, person, or context with a click.</p>
-      </article>
+    <article class="showcase-block showcase-block--reverse reveal">
+      <div class="showcase-block__visual">
+        <img src="../../assets/images/screenshot-light-2.png" alt="Task detail view with all fields filled in" loading="lazy">
+      </div>
+      <div class="showcase-block__copy">
+        <span class="showcase-block__eyebrow">Nook v1.0 · Task detail</span>
+        <h3 class="h2 showcase-block__title">Has what you need. Doesn't demand it.</h3>
+        <p class="showcase-block__body">Title, description, due date, sub-tasks, multi-tag — every field a real todo deserves.</p>
+        <p class="showcase-block__body">Skip the ones you don't need. Nook won't nag you for completion.</p>
+      </div>
+    </article>
 
-      <article class="feature">
-        <div class="feature__ico" aria-hidden="true">
-          <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v7H4z"/><path d="M14 7l4-3 4 3v4l-4 3-4-3z" opacity=".4"/></svg>
-        </div>
-        <h3 class="h3">Hot corner trigger</h3>
-        <p class="feature__desc">No shortcut to memorize. Just push the mouse where you need it.</p>
-      </article>
+    <article class="showcase-block reveal">
+      <div class="showcase-block__copy">
+        <span class="showcase-block__eyebrow">Nook v1.0 · Snippets</span>
+        <h3 class="h2 showcase-block__title">The lines you keep retyping. Stash them in the corner.</h3>
+        <p class="showcase-block__body">Email, signature, customer reply templates — the things you'd otherwise retype a dozen times a day. Drop them into Nook's snippet rail.</p>
+        <p class="showcase-block__body"><code>⌥1</code> / <code>⌥2</code> / <code>⌥3</code> pastes them anywhere — terminal, mail, IM, docs. Cross-app, no friction.</p>
+      </div>
+      <div class="showcase-block__visual">
+        <img src="../../assets/images/screenshot-dark-1.png" alt="Empty state in dark mode" loading="lazy">
+      </div>
+    </article>
 
-      <article class="feature">
-        <div class="feature__ico" aria-hidden="true">
-          <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="9"/><path d="M9.5 14l3 3 6-6"/></svg>
-        </div>
-        <h3 class="h3">Apple Reminders sync</h3>
-        <p class="feature__desc">Tasks with due dates appear on your iPhone via iCloud.</p>
-      </article>
+    <article class="showcase-block showcase-block--reverse reveal">
+      <div class="showcase-block__visual">
+        <img src="../../assets/images/screenshot-dark-2.png" alt="Settings popover with the Apple Reminders toggle" loading="lazy">
+      </div>
+      <div class="showcase-block__copy">
+        <span class="showcase-block__eyebrow">Nook v1.0 · Apple Reminders sync</span>
+        <h3 class="h2 showcase-block__title">Also on your iPhone.</h3>
+        <p class="showcase-block__body">Tasks with due dates flow into Apple Reminders' "Nook" list and ride iCloud to all your devices.</p>
+        <p class="showcase-block__body">Capture once on your Mac. Glance once on your iPhone in the elevator. That's it.</p>
+      </div>
+    </article>
 
-      <article class="feature">
-        <div class="feature__ico" aria-hidden="true">
-          <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="21" height="18" rx="2"/><path d="M7 11l3 3-3 3M13 17h7"/></svg>
-        </div>
-        <h3 class="h3">Command-line companion</h3>
-        <p class="feature__desc"><code>nooktodo "ship the thing"</code> from any terminal.</p>
-      </article>
-
-      <article class="feature">
-        <div class="feature__ico" aria-hidden="true">
-          <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="14" height="18" rx="2"/><rect x="9" y="7" width="14" height="18" rx="2" opacity=".5"/></svg>
-        </div>
-        <h3 class="h3">Snippet shortcuts</h3>
-        <p class="feature__desc">Stash text you copy often, paste with <code>⌥1</code> / <code>⌥2</code> / <code>⌥3</code>.</p>
-      </article>
-
-      <article class="feature">
-        <div class="feature__ico" aria-hidden="true">
-          <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l9 5v10l-9 5-9-5V9z"/><path d="M14 14l9-5M14 14v10M14 14L5 9" opacity=".5"/></svg>
-        </div>
-        <h3 class="h3">Native &amp; light</h3>
-        <p class="feature__desc">5 MB. No background daemon. No account.</p>
-      </article>
-
-    </div>
-  </section>
-
-
-  <!-- ============ SCREENSHOTS ============ -->
-  <section class="container section reveal" id="screenshots">
-    <div class="section-head">
-      <span class="eyebrow">Screens</span>
-      <h2 class="h1">See it in action.</h2>
-    </div>
-
-    <div class="shot-rail" role="list">
-      <div class="shot" role="listitem"><img src="../../assets/images/screenshot-light-1.png" alt="Nook main panel in light mode showing a busy inbox" loading="lazy"></div>
-      <div class="shot" role="listitem"><img src="../../assets/images/screenshot-light-2.png" alt="Task detail view with title, subtasks, tags, and due date" loading="lazy"></div>
-      <div class="shot" role="listitem"><img src="../../assets/images/screenshot-dark-1.png" alt="Dark mode empty state with playful illustration" loading="lazy"></div>
-      <div class="shot" role="listitem"><img src="../../assets/images/screenshot-dark-2.png" alt="Settings popover showing hot corner, CLI, and Reminders sync" loading="lazy"></div>
-    </div>
   </section>
 
 

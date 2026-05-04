@@ -480,27 +480,71 @@ button { font: inherit; }
   color: var(--text-1);
 }
 
-/* Screenshots --------------------------------------------------------- */
-.shot-rail {
+/* Showcase blocks (zig-zag) ------------------------------------------- */
+.showcase-block {
   display: grid;
-  grid-template-columns: repeat(4, minmax(260px, 1fr));
-  gap: 16px;
-  margin-top: 40px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 8px;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+  margin-top: 96px;
 }
-.shot {
-  scroll-snap-align: start;
+.showcase-block:first-of-type { margin-top: 56px; }
+
+.showcase-block--reverse .showcase-block__copy { order: 2; }
+.showcase-block--reverse .showcase-block__visual { order: 1; }
+
+@media (max-width: 880px) {
+  .showcase-block {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    margin-top: 64px;
+  }
+  .showcase-block--reverse .showcase-block__copy { order: 1; }
+  .showcase-block--reverse .showcase-block__visual { order: 2; }
+}
+
+.showcase-block__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 16px;
+}
+.showcase-block__title {
+  margin-bottom: 20px;
+  letter-spacing: -0.4px;
+}
+.showcase-block__body {
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.75;
+  margin-bottom: 14px;
+}
+.showcase-block__body:last-child { margin-bottom: 0; }
+.showcase-block__body code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--bg-alt);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-1);
+}
+
+.showcase-block__visual {
   border-radius: var(--r-card);
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
-  aspect-ratio: 4 / 3;
   box-shadow: var(--shadow-soft);
 }
-@media (max-width: 880px) {
-  .shot-rail { grid-template-columns: repeat(4, 78%); }
+.showcase-block__visual img,
+.showcase-block__visual video {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
 /* Download ------------------------------------------------------------ */
