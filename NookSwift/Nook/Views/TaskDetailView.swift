@@ -30,10 +30,11 @@ struct TaskDetailView: View {
         VStack(spacing: 0) {
             detailHeader
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 10) {
                     editorFields
-                    metaChipsRow
-                    subtaskSection
+                    metaCard
+                    tagCard
+                    subtaskCard
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
@@ -104,16 +105,16 @@ struct TaskDetailView: View {
         .padding(.bottom, 15)
     }
 
-    /// Inline chip flow: date · priority · tag pills · +tag
-    /// Wraps to next line when content overflows (WrappingHStack).
-    private var metaChipsRow: some View {
-        WrappingHStack(spacing: 6, lineSpacing: 6) {
-            // Date chip
+    // MARK: - Plan B: Three cards (meta / tags / subtasks)
+
+    /// Meta card: just date + priority inline (no header)
+    private var metaCard: some View {
+        HStack(spacing: 16) {
             Button {
                 showDatePicker.toggle()
                 showPriorityPicker = false
             } label: {
-                metaChip(
+                fieldChip(
                     icon: .calendar,
                     label: formattedDueDate,
                     isSet: selectedDueDate != nil,
@@ -130,12 +131,11 @@ struct TaskDetailView: View {
                 )
             }
 
-            // Priority chip
             Button {
                 showPriorityPicker.toggle()
                 showDatePicker = false
             } label: {
-                metaChip(
+                fieldChip(
                     icon: .flag,
                     label: selectedPriority == .none ? "Priority" : selectedPriority.label,
                     isSet: selectedPriority != .none,
@@ -151,55 +151,66 @@ struct TaskDetailView: View {
                 )
             }
 
-            // Tag pills (existing tagChip helper handles styling per HTML)
-            ForEach(selectedTags, id: \.self) { tag in
-                tagChip(tag)
-            }
-
-            // + Tag (dashed-border chip)
-            Button {
-                showTagSheet = true
-            } label: {
-                HStack(spacing: 4) {
-                    NookIcon(.plus, size: 11)
-                    Text("Tag")
-                        .font(.nook(size: 11.5, weight: .medium))
-                }
-                .foregroundStyle(NookTheme.t4(colorScheme))
-                .padding(.horizontal, 10)
-                .frame(height: 26)
-                .background(NookTheme.bg2(colorScheme), in: RoundedRectangle(cornerRadius: 7))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 7)
-                        .strokeBorder(NookTheme.line(colorScheme), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                )
-            }
-            .buttonStyle(.plain)
+            Spacer()
         }
+        .padding(12)
+        .background(NookTheme.bg2(colorScheme), in: RoundedRectangle(cornerRadius: 10))
     }
 
-    /// One chip in the meta row (date / priority).
-    /// Empty state: bg2 + t4 text. Set state: 8% tint of setColor + setColor text.
-    private func metaChip(icon: NookIconName, label: String, isSet: Bool, setColor: Color) -> some View {
+    /// Inline label-style field (no chip background) — for use inside cards.
+    /// Empty: t4 gray. Set: accent or color-coded fg with weight 500.
+    private func fieldChip(icon: NookIconName, label: String, isSet: Bool, setColor: Color) -> some View {
         HStack(spacing: 5) {
-            NookIcon(icon, size: 12)
+            NookIcon(icon, size: 13)
             Text(label)
-                .font(.nook(size: 11.5, weight: isSet ? .semibold : .medium))
+                .font(.nook(size: 12, weight: isSet ? .semibold : .medium))
         }
         .foregroundStyle(isSet ? setColor : NookTheme.t4(colorScheme))
-        .padding(.horizontal, 10)
-        .frame(height: 26)
-        .background(
-            (isSet ? setColor.opacity(0.10) : NookTheme.bg2(colorScheme)),
-            in: RoundedRectangle(cornerRadius: 7)
-        )
     }
 
-    /// Subtasks block — wrapped in a bg2 rounded container per design plan A.
-    /// Header(SUBTASKS · count/total) → list rows → dashed-border-top → Add input row.
-    private var subtaskSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Header
+    /// Tag card: header "TAGS" + tag pills + "+ Add tag" dashed pill
+    private var tagCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Text("TAGS")
+                    .font(.nook(size: 11, weight: .semibold))
+                    .foregroundStyle(NookTheme.t3(colorScheme))
+                    .tracking(0.5)
+                Spacer()
+            }
+
+            WrappingHStack(spacing: 5, lineSpacing: 5) {
+                ForEach(selectedTags, id: \.self) { tag in
+                    tagChip(tag)
+                }
+                Button {
+                    showTagSheet = true
+                } label: {
+                    HStack(spacing: 4) {
+                        NookIcon(.plus, size: 10)
+                        Text("Add tag")
+                            .font(.nook(size: 11, weight: .medium))
+                    }
+                    .foregroundStyle(NookTheme.t4(colorScheme))
+                    .padding(.horizontal, 9)
+                    .frame(height: 22)
+                    .background(NookTheme.bg(colorScheme), in: Capsule())
+                    .overlay(
+                        Capsule()
+                            .strokeBorder(NookTheme.line(colorScheme), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(NookTheme.bg2(colorScheme), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    /// Subtasks card: header "SUBTASKS" + count → rows → white-bg input row
+    private var subtaskCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 Text("SUBTASKS")
                     .font(.nook(size: 11, weight: .semibold))
@@ -213,34 +224,34 @@ struct TaskDetailView: View {
                         .foregroundStyle(NookTheme.t4(colorScheme))
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.top, 9)
-            .padding(.bottom, 6)
+            .padding(.bottom, 2)
 
-            // List rows
             ForEach(displayedSubtasks) { subtask in
                 subtaskRow(subtask)
             }
 
-            // Add input row — separated by a thin dashed top border
-            VStack(spacing: 0) {
-                DashedDivider(color: NookTheme.line(colorScheme))
-                HStack(spacing: 8) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(NookTheme.t4(colorScheme))
-                        .frame(width: 14, height: 14)
-                    TextField("Add subtask", text: $newSubtaskTitle)
-                        .textFieldStyle(.plain)
-                        .font(.nook(size: 12.5))
-                        .foregroundStyle(NookTheme.t1(colorScheme))
-                        .onSubmit { addSubtask() }
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+            // Add input — white bg with thin border (per plan B HTML)
+            HStack(spacing: 10) {
+                Image(systemName: "plus")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(NookTheme.accent(colorScheme))
+                    .frame(width: 14, height: 14)
+                TextField("Add subtask", text: $newSubtaskTitle)
+                    .textFieldStyle(.plain)
+                    .font(.nook(size: 12.5))
+                    .foregroundStyle(NookTheme.t1(colorScheme))
+                    .onSubmit { addSubtask() }
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(NookTheme.bg(colorScheme), in: RoundedRectangle(cornerRadius: 6))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(NookTheme.line(colorScheme), lineWidth: 1)
+            )
             .padding(.top, 4)
         }
+        .padding(12)
         .background(NookTheme.bg2(colorScheme), in: RoundedRectangle(cornerRadius: 10))
     }
 
@@ -319,8 +330,7 @@ struct TaskDetailView: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .padding(.vertical, 5)
     }
 
     private func loadState() {
