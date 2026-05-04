@@ -87,43 +87,24 @@ struct SettingsPopoverView: View {
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Install once, then any AI agent (Claude, Cursor, etc.) can add tasks for you. Paste the command into Terminal and run it.")
-                    .font(.nook(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(installCommandPreview)
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(.primary)
-                    .lineLimit(nil)
-                    .multilineTextAlignment(.leading)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.primary.opacity(0.05))
-                    )
-
-                Button {
-                    copyInstallCommand()
-                } label: {
-                    HStack(spacing: 5) {
-                        NookIcon(copiedCli ? .checkmark : .copy, size: 10)
-                        Text(copiedCli ? "Copied to clipboard" : "Copy install command")
-                            .font(.nook(size: 11, weight: .medium))
-                    }
-                    .foregroundStyle(NookTheme.tagOnFg(colorScheme))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 7)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(NookTheme.accent(colorScheme))
-                    )
+            Button {
+                copyInstallCommand()
+            } label: {
+                HStack(spacing: 5) {
+                    NookIcon(copiedCli ? .checkmark : .copy, size: 10)
+                    Text(copiedCli ? "Copied" : "Copy install command")
+                        .font(.nook(size: 11, weight: .medium))
                 }
-                .buttonStyle(.plain)
+                .foregroundStyle(NookTheme.tagOnFg(colorScheme))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(NookTheme.accent(colorScheme))
+                )
             }
+            .buttonStyle(.plain)
+            .help("Paste into Terminal — installs nooktodo CLI so AI agents can add tasks for you.")
 
             // ──── Calendar / Reminders ────
             Text("Calendar Sync")
@@ -183,7 +164,7 @@ struct SettingsPopoverView: View {
                     Text("Sync to Apple Reminders")
                         .font(.nook(size: 11, weight: .medium))
                         .foregroundStyle(.primary)
-                    Text("Writes to the \"Nook\" list. Visible in Calendar.app too.")
+                    Text("Visible in Calendar.app too")
                         .font(.nook(size: 9))
                         .foregroundStyle(.secondary)
                 }
@@ -256,15 +237,6 @@ struct SettingsPopoverView: View {
         case .synced(let count): syncStatusText = count == 0 ? "" : "✓ Synced \(count) task\(count == 1 ? "" : "s")"
         case .error(let msg): syncStatusText = "✗ Sync failed: \(msg)"
         }
-    }
-
-    /// Display preview — short version of the actual command for visual hint.
-    private var installCommandPreview: String {
-        """
-        # Auto-finds Nook.app + picks a PATH dir to install into
-        # Will append ~/.local/bin to .zshrc if needed
-        bash -c "$(...auto-install script...)"
-        """
     }
 
     /// Full clipboard command — robust auto-install that:
