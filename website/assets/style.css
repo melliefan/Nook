@@ -532,19 +532,17 @@ button { font: inherit; }
   color: var(--text-1);
 }
 
+/* 容器无框 — 截图本身已经自带圆角和阴影,加框会双层叠 */
 .showcase-block__visual {
-  border-radius: var(--r-card);
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .showcase-block__visual img,
 .showcase-block__visual video {
   display: block;
-  width: 100%;
+  max-width: 100%;
   height: auto;
-  object-fit: cover;
 }
 
 /* Download ------------------------------------------------------------ */
