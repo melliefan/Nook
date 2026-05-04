@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Nook · New Task / Edit Task UI 优化方案</title>
+<style>
+:root {
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+  --mono: 'SF Mono', Menlo, monospace;
+}
+
+[data-theme="light"] {
+  --bg: #FCFCFD;
+  --bg2: #F1F1F4;
+  --bgh: #E8E8ED;
+  --t1: #1E1E2A;
+  --t2: #5C5C6E;
+  --t3: #8A8A96;
+  --t4: #BBBBC2;
+  --line: #DDDDE2;
+  --pn: #D4D4DA;
+  --accent: #3A3A48;
+  --accent-fg: #F7F7FA;
+  --accent-bg: rgba(58,58,72,0.08);
+  --red: #FF3B30;
+  --orange: #FF9500;
+  --shadow: 0 12px 40px rgba(30,30,42,0.08), 0 0 0 1px rgba(30,30,42,0.04);
+}
+
+body {
+  font-family: var(--sans);
+  margin: 0;
+  padding: 40px 30px 100px;
+  background: #DBDBDF;
+  color: #1E1E2A;
+  -webkit-font-smoothing: antialiased;
+}
+
+.doc-h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 6px; }
+.doc-meta { font-size: 12px; color: #7A7A85; margin-bottom: 32px; line-height: 1.65; max-width: 720px; }
+
+h2.sec-h2 { font-size: 18px; font-weight: 700; margin: 0 0 8px; color: #1E1E2A; }
+.sec-desc { font-size: 12px; color: #6E6E78; line-height: 1.6; margin-bottom: 14px; max-width: 600px; }
+.sec-desc strong { color: #2E2E38; }
+
+.row-frame {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 60px;
+}
+.label-strip {
+  background: var(--bg);
+  padding: 5px 11px;
+  border-radius: 5px;
+  font-size: 11px;
+  color: #7A7A85;
+  border: 1px solid var(--line);
+  margin-bottom: 8px;
+  display: inline-block;
+}
+.label-strip strong { color: #1E1E2A; }
+
+/* ════════ Panel ════════ */
+.panel {
+  width: 380px;
+  background: var(--bg);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: var(--t1);
+}
+
+/* ── Header (Header 全方案共用,改改细节) ── */
+.hd {
+  height: 38px;
+  display: grid;
+  grid-template-columns: 36px 1fr 44px;
+  align-items: center;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.hd .back { color: var(--t1); cursor: pointer; font-size: 14px; line-height: 1; }
+.hd .title {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t1);
+}
+.hd .save {
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+/* ════════ Reusable bits ════════ */
+.scroll {
+  padding: 16px 20px 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ═══════════════════════════════════════════ */
+/* ════════ 方案 A · 紧凑现代式 ════════ */
+/* ═══════════════════════════════════════════ */
+
+.a-title-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.3px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+.a-notes-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--t3);
+  width: 100%;
+  resize: none;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+/* 元数据用 chip — 没有分隔线,inline */
+.a-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.a-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 7px;
+  background: var(--bg2);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--t2);
+  cursor: pointer;
+}
+.a-chip.empty { color: var(--t4); }
+.a-chip.set-date { color: var(--accent); background: var(--accent-bg); }
+.a-chip.set-prio.high { color: var(--red); background: rgba(255,59,48,0.08); }
+.a-chip .ico { font-size: 12px; }
+
+.a-meta-row .a-tag-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 7px;
+  background: var(--bg2);
+  font-size: 11.5px;
+  color: var(--t4);
+  cursor: pointer;
+  border: 1px dashed var(--line);
+}
+.a-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 11px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.a-tag-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* Subtasks block — 这是核心改进点 */
+.a-subs-block {
+  background: var(--bg2);
+  border-radius: 10px;
+  padding: 8px 0 4px;
+}
+.a-subs-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--t3);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.a-subs-head .progress {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--t4);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.a-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--t1);
+}
+.a-sub-row.done { color: var(--t4); text-decoration: line-through; }
+.a-sub-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1.5px solid var(--pn);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.a-sub-box.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  font-size: 9px;
+  font-weight: 700;
+}
+.a-sub-x {
+  margin-left: auto;
+  color: var(--t4);
+  opacity: 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+.a-sub-row:hover .a-sub-x { opacity: 1; }
+
+.a-add-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-top: 1px dashed var(--line);
+  margin-top: 4px;
+}
+.a-add-input-row .plus {
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--t4);
+  font-size: 12px;
+}
+.a-add-input-row input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--t1);
+}
+.a-add-input-row input::placeholder { color: var(--t4); }
+
+/* ═══════════════════════════════════════════ */
+/* ════════ 方案 B · 卡片分组式 ════════ */
+/* ═══════════════════════════════════════════ */
+
+.b-title-input {
+  border: none; outline: none; background: transparent;
+  font-family: var(--sans);
+  font-size: 19px; font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.3px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+.b-notes-input {
+  border: none; outline: none; background: transparent;
+  font-family: var(--sans);
+  font-size: 12px; color: var(--t3);
+  width: 100%; resize: none; line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.b-card {
+  background: var(--bg2);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.b-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--t3);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.b-card-head .progress {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--t4);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.b-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.b-meta-row .field {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--t2);
+  cursor: pointer;
+}
+.b-meta-row .field.empty { color: var(--t4); }
+.b-meta-row .field.set { font-weight: 500; color: var(--accent); }
+
+.b-tag-list {
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.b-tag-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 9px;
+  border-radius: 11px;
+  font-size: 11px; font-weight: 500;
+}
+.b-tag-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+.b-tag-add {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 9px;
+  border-radius: 11px;
+  background: var(--bg);
+  font-size: 11px;
+  color: var(--t4);
+  cursor: pointer;
+  border: 1px dashed var(--line);
+}
+
+.b-sub-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 0;
+  font-size: 13px; color: var(--t1);
+}
+.b-sub-row.done { color: var(--t4); text-decoration: line-through; }
+.b-sub-box {
+  width: 14px; height: 14px;
+  border-radius: 4px;
+  border: 1.5px solid var(--pn);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.b-sub-box.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  font-size: 9px; font-weight: 700;
+}
+.b-add-input-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 8px;
+  margin-top: 6px;
+  background: var(--bg);
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.b-add-input-row .plus {
+  font-size: 13px; color: var(--accent);
+}
+.b-add-input-row input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-family: var(--sans);
+  font-size: 12.5px; color: var(--t1);
+}
+.b-add-input-row input::placeholder { color: var(--t4); }
+
+/* ═══════════════════════════════════════════ */
+/* ════════ 方案 C · Notion / Linear 风 ════════ */
+/* ═══════════════════════════════════════════ */
+
+.c-title-input {
+  border: none; outline: none; background: transparent;
+  font-family: var(--sans);
+  font-size: 22px; font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.4px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+.c-notes-input {
+  border: none; outline: none; background: transparent;
+  font-family: var(--sans);
+  font-size: 12px; color: var(--t3);
+  width: 100%; resize: none; line-height: 1.55;
+  margin-bottom: 22px;
+}
+.c-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--t3);
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.c-meta-row .field {
+  display: flex; align-items: center; gap: 5px;
+  cursor: pointer;
+}
+.c-meta-row .field.set { color: var(--t1); font-weight: 500; }
+.c-meta-row .field.set.high { color: var(--red); }
+.c-meta-row .sep { color: var(--t4); font-size: 10px; }
+.c-meta-row .tag-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+.c-meta-row .tag-pill .dot { width: 5px; height: 5px; border-radius: 50%; }
+.c-meta-row .tag-add {
+  font-size: 11px; color: var(--t4); cursor: pointer;
+  text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px;
+}
+
+.c-sub-head {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--t3);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.c-sub-head .progress {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--t4);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.c-sub-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 0;
+  font-size: 13px; color: var(--t1);
+}
+.c-sub-row.done { color: var(--t4); text-decoration: line-through; }
+.c-sub-box {
+  width: 14px; height: 14px;
+  border-radius: 4px;
+  border: 1.5px solid var(--pn);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.c-sub-box.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  font-size: 9px; font-weight: 700;
+}
+.c-add-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--t4);
+}
+.c-add-row .plus {
+  width: 14px; height: 14px;
+  border-radius: 4px;
+  border: 1.5px dashed var(--pn);
+  display: grid; place-items: center;
+  font-size: 10px;
+  color: var(--t4);
+}
+.c-add-row input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-family: var(--sans);
+  font-size: 13px; color: var(--t1);
+}
+.c-add-row input::placeholder { color: var(--t4); }
+
+</style>
+</head>
+<body data-theme="light">
+
+<h1 class="doc-h1">Task Detail UI · 3 个优化方案</h1>
+<div class="doc-meta">
+  对比 New Task / Edit Task 详情页的 3 个布局方向。聚焦在 Add subtask 输入区的视觉权重 + 整体节奏。
+  当前实现的问题:add subtask 行像静态文本不像输入框、4 条分隔线把页面切碎、subtasks 列表跟"添加"行视觉割裂。
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<h2 class="sec-h2">方案 A · 紧凑现代式 ⭐ 推荐</h2>
+<p class="sec-desc">
+  <strong>核心思路:</strong> 元数据用 inline chip 紧凑排,无分隔线;subtasks 整体用一个浅灰底色的"组",列表 + 输入框在同一组内视觉连续,添加 subtask 一眼看出是输入区。
+  <br>
+  <strong>视觉节奏:</strong> 标题区(白) → 元数据 chips → 标签 chips → subtasks 组(浅灰底) → 留白。无横线,呼吸感来自背景对比 + 间距。
+</p>
+
+<div class="row-frame">
+
+  <div>
+    <div class="label-strip"><strong>方案 A</strong> — 含数据(已开始填)</div>
+    <div class="panel">
+      <div class="hd">
+        <div class="back">‹</div>
+        <div class="title">Edit Task</div>
+        <div class="save">Save</div>
+      </div>
+      <div class="scroll">
+        <input class="a-title-input" value="Ship Nook v1.0 to the world">
+        <textarea class="a-notes-input" rows="2">Notarize, build DMG, push v1.0 tag, draft Hacker News post for Tuesday morning launch.</textarea>
+
+        <div class="a-meta-row">
+          <span class="a-chip set-date">📅 May 13</span>
+          <span class="a-chip set-prio high">🚩 High</span>
+          <span class="a-tag-pill" style="background:rgba(255,183,77,0.14);color:#B86A00;">
+            <span class="dot" style="background:#FFB74D"></span>Side
+          </span>
+          <span class="a-tag-pill" style="background:rgba(186,104,200,0.14);color:#7B1FA2;">
+            <span class="dot" style="background:#BA68C8"></span>Reading
+          </span>
+          <span class="a-tag-add">+ Tag</span>
+        </div>
+
+        <div class="a-subs-block">
+          <div class="a-subs-head">
+            <span>Subtasks</span>
+            <span class="progress">2/4</span>
+          </div>
+          <div class="a-sub-row done">
+            <div class="a-sub-box checked">✓</div>
+            <span>Sign with Developer ID + hardened runtime</span>
+            <span class="a-sub-x">×</span>
+          </div>
+          <div class="a-sub-row done">
+            <div class="a-sub-box checked">✓</div>
+            <span>xcrun notarytool submit + staple</span>
+            <span class="a-sub-x">×</span>
+          </div>
+          <div class="a-sub-row">
+            <div class="a-sub-box"></div>
+            <span>Test on a clean macOS install</span>
+            <span class="a-sub-x">×</span>
+          </div>
+          <div class="a-sub-row">
+            <div class="a-sub-box"></div>
+            <span>Draft Show HN post</span>
+            <span class="a-sub-x">×</span>
+          </div>
+
+          <div class="a-add-input-row">
+            <span class="plus">+</span>
+            <input placeholder="Add subtask">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="label-strip"><strong>方案 A</strong> — 空态(新建)</div>
+    <div class="panel">
+      <div class="hd">
+        <div class="back">‹</div>
+        <div class="title">New Task</div>
+        <div class="save">Save</div>
+      </div>
+      <div class="scroll">
+        <input class="a-title-input" placeholder="Type your task" style="color:var(--t4);">
+        <textarea class="a-notes-input" rows="2" placeholder="Notes (optional)"></textarea>
+
+        <div class="a-meta-row">
+          <span class="a-chip empty">📅 Due date</span>
+          <span class="a-chip empty">🚩 Priority</span>
+          <span class="a-tag-add">+ Tag</span>
+        </div>
+
+        <div class="a-subs-block">
+          <div class="a-subs-head">
+            <span>Subtasks</span>
+          </div>
+          <div class="a-add-input-row" style="border-top: none; margin-top: 0;">
+            <span class="plus">+</span>
+            <input placeholder="Add subtask">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<h2 class="sec-h2">方案 B · 卡片分组式</h2>
+<p class="sec-desc">
+  <strong>核心思路:</strong> 每个分组(meta / tags / subtasks)用浅灰圆角卡片包起来,卡内部紧凑,卡之间留白。标题保持白底无 chrome,展示主体内容。
+  <br>
+  <strong>视觉节奏:</strong> 标题区(白) → 3 张紧凑卡片(浅灰)。比 A 更清晰分组,但视觉块更多、稍重。
+</p>
+
+<div class="row-frame">
+
+  <div>
+    <div class="label-strip"><strong>方案 B</strong> — 含数据</div>
+    <div class="panel">
+      <div class="hd">
+        <div class="back">‹</div>
+        <div class="title">Edit Task</div>
+        <div class="save">Save</div>
+      </div>
+      <div class="scroll">
+        <input class="b-title-input" value="Ship Nook v1.0 to the world">
+        <textarea class="b-notes-input" rows="2">Notarize, build DMG, push v1.0 tag, draft Hacker News post.</textarea>
+
+        <div class="b-card">
+          <div class="b-meta-row">
+            <span class="field set">📅 May 13</span>
+            <span class="field set" style="color:var(--red);">🚩 High</span>
+          </div>
+        </div>
+
+        <div class="b-card">
+          <div class="b-card-head"><span>Tags</span></div>
+          <div class="b-tag-list">
+            <span class="b-tag-pill" style="background:rgba(255,183,77,0.14);color:#B86A00;">
+              <span class="dot" style="background:#FFB74D"></span>Side
+            </span>
+            <span class="b-tag-pill" style="background:rgba(186,104,200,0.14);color:#7B1FA2;">
+              <span class="dot" style="background:#BA68C8"></span>Reading
+            </span>
+            <span class="b-tag-add">+ Add tag</span>
+          </div>
+        </div>
+
+        <div class="b-card">
+          <div class="b-card-head">
+            <span>Subtasks</span>
+            <span class="progress">2/4</span>
+          </div>
+          <div class="b-sub-row done">
+            <div class="b-sub-box checked">✓</div>
+            <span>Sign with Developer ID + hardened runtime</span>
+          </div>
+          <div class="b-sub-row done">
+            <div class="b-sub-box checked">✓</div>
+            <span>xcrun notarytool submit + staple</span>
+          </div>
+          <div class="b-sub-row">
+            <div class="b-sub-box"></div>
+            <span>Test on a clean macOS install</span>
+          </div>
+          <div class="b-sub-row">
+            <div class="b-sub-box"></div>
+            <span>Draft Show HN post</span>
+          </div>
+          <div class="b-add-input-row">
+            <span class="plus">+</span>
+            <input placeholder="Add subtask">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="label-strip"><strong>方案 B</strong> — 空态(新建)</div>
+    <div class="panel">
+      <div class="hd">
+        <div class="back">‹</div>
+        <div class="title">New Task</div>
+        <div class="save">Save</div>
+      </div>
+      <div class="scroll">
+        <input class="b-title-input" placeholder="Type your task" style="color:var(--t4);">
+        <textarea class="b-notes-input" rows="2" placeholder="Notes (optional)"></textarea>
+
+        <div class="b-card">
+          <div class="b-meta-row">
+            <span class="field empty">📅 Due date</span>
+            <span class="field empty">🚩 Priority</span>
+          </div>
+        </div>
+
+        <div class="b-card">
+          <div class="b-card-head"><span>Tags</span></div>
+          <div class="b-tag-list">
+            <span class="b-tag-add">+ Add tag</span>
+          </div>
+        </div>
+
+        <div class="b-card">
+          <div class="b-card-head"><span>Subtasks</span></div>
+          <div class="b-add-input-row">
+            <span class="plus">+</span>
+            <input placeholder="Add subtask">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<h2 class="sec-h2">方案 C · Notion / Linear 风(极简)</h2>
+<p class="sec-desc">
+  <strong>核心思路:</strong> 标题超大,元数据用一行 inline 标签 + 分隔点(像 Notion document properties),底部一条线分隔。subtasks 不用任何 chrome,直接列出来,Add 行的 + 用虚线 box,跟列表 checkbox 视觉权重一致,节奏统一。
+  <br>
+  <strong>视觉节奏:</strong> 标题超大(22pt) → 元数据 inline 一行 → 分隔线 → subtasks(无 chrome)。最纯粹,但分组弱,数据多时可能略密。
+</p>
+
+<div class="row-frame">
+
+  <div>
+    <div class="label-strip"><strong>方案 C</strong> — 含数据</div>
+    <div class="panel">
+      <div class="hd">
+        <div class="back">‹</div>
+        <div class="title">Edit Task</div>
+        <div class="save">Save</div>
+      </div>
+      <div class="scroll">
+        <input class="c-title-input" value="Ship Nook v1.0 to the world">
+        <textarea class="c-notes-input" rows="2">Notarize, build DMG, push v1.0 tag, draft Hacker News post.</textarea>
+
+        <div class="c-meta-row">
+          <span class="field set">📅 May 13</span>
+          <span class="sep">·</span>
+          <span class="field set high">🚩 High</span>
+          <span class="sep">·</span>
+          <span class="tag-pill" style="background:rgba(255,183,77,0.14);color:#B86A00;">
+            <span class="dot" style="background:#FFB74D"></span>Side
+          </span>
+          <span class="tag-pill" style="background:rgba(186,104,200,0.14);color:#7B1FA2;">
+            <span class="dot" style="background:#BA68C8"></span>Reading
+          </span>
+          <span class="tag-add">+ tag</span>
+        </div>
+
+        <div class="c-sub-head">
+          <span>Subtasks</span>
+          <span class="progress">2/4</span>
+        </div>
+        <div class="c-sub-row done">
+          <div class="c-sub-box checked">✓</div>
+          <span>Sign with Developer ID + hardened runtime</span>
+        </div>
+        <div class="c-sub-row done">
+          <div class="c-sub-box checked">✓</div>
+          <span>xcrun notarytool submit + staple</span>
+        </div>
+        <div class="c-sub-row">
+          <div class="c-sub-box"></div>
+          <span>Test on a clean macOS install</span>
+        </div>
+        <div class="c-sub-row">
+          <div class="c-sub-box"></div>
+          <span>Draft Show HN post</span>
+        </div>
+        <div class="c-add-row">
+          <span class="plus">+</span>
+          <input placeholder="Add subtask">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="label-strip"><strong>方案 C</strong> — 空态(新建)</div>
+    <div class="panel">
+      <div class="hd">
+        <div class="back">‹</div>
+        <div class="title">New Task</div>
+        <div class="save">Save</div>
+      </div>
+      <div class="scroll">
+        <input class="c-title-input" placeholder="Type your task" style="color:var(--t4);">
+        <textarea class="c-notes-input" rows="2" placeholder="Notes (optional)"></textarea>
+
+        <div class="c-meta-row">
+          <span class="field" style="color:var(--t4)">📅 Due date</span>
+          <span class="sep">·</span>
+          <span class="field" style="color:var(--t4)">🚩 Priority</span>
+          <span class="sep">·</span>
+          <span class="tag-add">+ tag</span>
+        </div>
+
+        <div class="c-sub-head"><span>Subtasks</span></div>
+        <div class="c-add-row">
+          <span class="plus">+</span>
+          <input placeholder="Add subtask">
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<h2 class="sec-h2">三方案 trade-off 总结</h2>
+<table style="font-size:13px; border-collapse: collapse; width: 100%; max-width: 720px;">
+  <thead>
+    <tr style="border-bottom: 1px solid #DDDDE2; background: rgba(255,255,255,0.5);">
+      <th style="text-align:left; padding: 10px 12px; font-weight: 600;"></th>
+      <th style="text-align:left; padding: 10px 12px; font-weight: 600;">A · 紧凑现代</th>
+      <th style="text-align:left; padding: 10px 12px; font-weight: 600;">B · 卡片分组</th>
+      <th style="text-align:left; padding: 10px 12px; font-weight: 600;">C · Notion/Linear</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid #EEEEF1;">
+      <td style="padding: 8px 12px; color:#7A7A85;">Add subtask 一眼看出是输入框</td>
+      <td style="padding: 8px 12px;">✅ 浅灰组里的虚线分隔 + 输入</td>
+      <td style="padding: 8px 12px;">✅ 卡片内最后一行,白底框</td>
+      <td style="padding: 8px 12px;">⚠️ 虚线 box + 输入,稍弱</td>
+    </tr>
+    <tr style="border-bottom: 1px solid #EEEEF1;">
+      <td style="padding: 8px 12px; color:#7A7A85;">视觉块数</td>
+      <td style="padding: 8px 12px;">2 个(标题区 + subs 组)</td>
+      <td style="padding: 8px 12px;">4 个(标题区 + 3 卡)</td>
+      <td style="padding: 8px 12px;">1 整块(无明显分组)</td>
+    </tr>
+    <tr style="border-bottom: 1px solid #EEEEF1;">
+      <td style="padding: 8px 12px; color:#7A7A85;">空态简洁度</td>
+      <td style="padding: 8px 12px;">高(空 chip + 简单输入)</td>
+      <td style="padding: 8px 12px;">中(3 张半空卡)</td>
+      <td style="padding: 8px 12px;">最高(纯净)</td>
+    </tr>
+    <tr style="border-bottom: 1px solid #EEEEF1;">
+      <td style="padding: 8px 12px; color:#7A7A85;">数据多时层次</td>
+      <td style="padding: 8px 12px;">清晰</td>
+      <td style="padding: 8px 12px;">最清晰</td>
+      <td style="padding: 8px 12px;">略密</td>
+    </tr>
+    <tr style="border-bottom: 1px solid #EEEEF1;">
+      <td style="padding: 8px 12px; color:#7A7A85;">改 Swift 工作量</td>
+      <td style="padding: 8px 12px;">中(一个新组件)</td>
+      <td style="padding: 8px 12px;">大(3 个卡片重构)</td>
+      <td style="padding: 8px 12px;">小(去掉框,改样式)</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 12px; color:#7A7A85;">参照</td>
+      <td style="padding: 8px 12px;">Things 3 + Linear 折中</td>
+      <td style="padding: 8px 12px;">Bear / Apple 备忘录</td>
+      <td style="padding: 8px 12px;">Notion / Linear</td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="margin-top: 24px; color: #5C5C6E; font-size: 13px;">
+  <strong>我的推荐:</strong> 方案 A。理由:解决你说的"add subtask 不像输入框"问题最直接(浅灰底色组里 visually 一体);视觉块少,符合英语 Mac 用户偏好的 minimal;改造工作量适中。<br><br>
+  <strong>选好告诉我哪个方案 + 微调点(比如 chip 颜色/间距/字号),我再去改 Swift。</strong>
+</p>
+
+</body>
+</html>

@@ -30,10 +30,9 @@ struct TaskDetailView: View {
         VStack(spacing: 0) {
             detailHeader
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 18) {
                     editorFields
-                    metaSection
-                    tagSection
+                    metaChipsRow
                     subtaskSection
                 }
                 .padding(.horizontal, 20)
@@ -105,18 +104,21 @@ struct TaskDetailView: View {
         .padding(.bottom, 15)
     }
 
-    private var metaSection: some View {
-        HStack(spacing: 10) {
+    /// Inline chip flow: date · priority · tag pills · +tag
+    /// Wraps to next line when content overflows (WrappingHStack).
+    private var metaChipsRow: some View {
+        WrappingHStack(spacing: 6, lineSpacing: 6) {
+            // Date chip
             Button {
                 showDatePicker.toggle()
                 showPriorityPicker = false
             } label: {
-                HStack(spacing: 5) {
-                    NookIcon(.calendar, size: 13)
-                    Text(formattedDueDate)
-                        .font(.system(size: 11, weight: selectedDueDate == nil ? .medium : .semibold))
-                }
-                .foregroundStyle(selectedDueDate == nil ? NookTheme.t4(colorScheme) : NookTheme.accent(colorScheme))
+                metaChip(
+                    icon: .calendar,
+                    label: formattedDueDate,
+                    isSet: selectedDueDate != nil,
+                    setColor: NookTheme.accent(colorScheme)
+                )
             }
             .buttonStyle(.plain)
             .popover(isPresented: $showDatePicker, arrowEdge: .bottom) {
@@ -128,20 +130,17 @@ struct TaskDetailView: View {
                 )
             }
 
-            Text("·")
-                .font(.nook(size: 12, weight: .bold))
-                .foregroundStyle(NookTheme.t4(colorScheme))
-
+            // Priority chip
             Button {
                 showPriorityPicker.toggle()
                 showDatePicker = false
             } label: {
-                HStack(spacing: 5) {
-                    NookIcon(.flag, size: 13)
-                    Text(selectedPriority.label)
-                        .font(.nook(size: 11, weight: .semibold))
-                }
-                .foregroundStyle(Color(hex: selectedPriority.color))
+                metaChip(
+                    icon: .flag,
+                    label: selectedPriority == .none ? "Priority" : selectedPriority.label,
+                    isSet: selectedPriority != .none,
+                    setColor: Color(hex: selectedPriority.color)
+                )
             }
             .buttonStyle(.plain)
             .popover(isPresented: $showPriorityPicker, arrowEdge: .bottom) {
@@ -152,91 +151,97 @@ struct TaskDetailView: View {
                 )
             }
 
-            Spacer()
-        }
-        .padding(.bottom, 15)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(NookTheme.line(colorScheme).opacity(0.7))
-                .frame(height: 1)
-        }
-        .padding(.bottom, 15)
-    }
-
-    private var tagSection: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text("Tags")
-                .font(.nook(size: 12, weight: .medium))
-                .foregroundStyle(NookTheme.t3(colorScheme))
-                .frame(width: 42, alignment: .leading)
-                .padding(.top, 5)
-
-            WrappingHStack(spacing: 7, lineSpacing: 6) {
-                ForEach(selectedTags, id: \.self) { tag in
-                    tagChip(tag)
-                }
-                Button {
-                    showTagSheet = true
-                } label: {
-                    HStack(spacing: 4) {
-                        NookIcon(.plus, size: 12)
-                        Text("Add")
-                            .font(.nook(size: 11, weight: .medium))
-                    }
-                    .foregroundStyle(NookTheme.t4(colorScheme))
-                    .padding(.horizontal, 10)
-                    .frame(height: 26)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 9)
-                            .strokeBorder(NookTheme.accent(colorScheme).opacity(0.32), style: StrokeStyle(lineWidth: 1.3, dash: [4, 4]))
-                    )
-                    .background(NookTheme.blueBg(colorScheme).opacity(0.35), in: RoundedRectangle(cornerRadius: 9))
-                }
-                .buttonStyle(.plain)
+            // Tag pills (existing tagChip helper handles styling per HTML)
+            ForEach(selectedTags, id: \.self) { tag in
+                tagChip(tag)
             }
+
+            // + Tag (dashed-border chip)
+            Button {
+                showTagSheet = true
+            } label: {
+                HStack(spacing: 4) {
+                    NookIcon(.plus, size: 11)
+                    Text("Tag")
+                        .font(.nook(size: 11.5, weight: .medium))
+                }
+                .foregroundStyle(NookTheme.t4(colorScheme))
+                .padding(.horizontal, 10)
+                .frame(height: 26)
+                .background(NookTheme.bg2(colorScheme), in: RoundedRectangle(cornerRadius: 7))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7)
+                        .strokeBorder(NookTheme.line(colorScheme), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                )
+            }
+            .buttonStyle(.plain)
         }
-        .padding(.bottom, 14)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(NookTheme.line(colorScheme).opacity(0.7))
-                .frame(height: 1)
-        }
-        .padding(.bottom, 15)
     }
 
+    /// One chip in the meta row (date / priority).
+    /// Empty state: bg2 + t4 text. Set state: 8% tint of setColor + setColor text.
+    private func metaChip(icon: NookIconName, label: String, isSet: Bool, setColor: Color) -> some View {
+        HStack(spacing: 5) {
+            NookIcon(icon, size: 12)
+            Text(label)
+                .font(.nook(size: 11.5, weight: isSet ? .semibold : .medium))
+        }
+        .foregroundStyle(isSet ? setColor : NookTheme.t4(colorScheme))
+        .padding(.horizontal, 10)
+        .frame(height: 26)
+        .background(
+            (isSet ? setColor.opacity(0.10) : NookTheme.bg2(colorScheme)),
+            in: RoundedRectangle(cornerRadius: 7)
+        )
+    }
+
+    /// Subtasks block — wrapped in a bg2 rounded container per design plan A.
+    /// Header(SUBTASKS · count/total) → list rows → dashed-border-top → Add input row.
     private var subtaskSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                NookIcon(.check, size: 15)
+            // Header
+            HStack(spacing: 6) {
+                Text("SUBTASKS")
+                    .font(.nook(size: 11, weight: .semibold))
                     .foregroundStyle(NookTheme.t3(colorScheme))
-                Text("Subtasks")
-                    .font(.nook(size: 12, weight: .medium))
-                    .foregroundStyle(NookTheme.t3(colorScheme))
+                    .tracking(0.5)
+                Spacer()
                 let count = displayedSubtasks.count
                 if count > 0 {
                     Text("\(completedSubtaskCount)/\(count)")
-                        .font(.nook(size: 11))
+                        .font(.nook(size: 10.5))
                         .foregroundStyle(NookTheme.t4(colorScheme))
                 }
-                Spacer()
             }
-            .padding(.bottom, 8)
+            .padding(.horizontal, 12)
+            .padding(.top, 9)
+            .padding(.bottom, 6)
 
+            // List rows
             ForEach(displayedSubtasks) { subtask in
                 subtaskRow(subtask)
             }
 
-            HStack(spacing: 6) {
-                NookIcon(.plus, size: 12)
-                TextField("Add subtask", text: $newSubtaskTitle)
-                    .textFieldStyle(.plain)
-                    .font(.nook(size: 12))
-                    .onSubmit { addSubtask() }
+            // Add input row — separated by a thin dashed top border
+            VStack(spacing: 0) {
+                DashedDivider(color: NookTheme.line(colorScheme))
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(NookTheme.t4(colorScheme))
+                        .frame(width: 14, height: 14)
+                    TextField("Add subtask", text: $newSubtaskTitle)
+                        .textFieldStyle(.plain)
+                        .font(.nook(size: 12.5))
+                        .foregroundStyle(NookTheme.t1(colorScheme))
+                        .onSubmit { addSubtask() }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
             }
-            .foregroundStyle(NookTheme.t4(colorScheme))
-            .padding(.leading, 23)
-            .padding(.top, 6)
+            .padding(.top, 4)
         }
+        .background(NookTheme.bg2(colorScheme), in: RoundedRectangle(cornerRadius: 10))
     }
 
     private var displayedSubtasks: [Subtask] {
@@ -280,19 +285,19 @@ struct TaskDetailView: View {
     }
 
     private func subtaskRow(_ subtask: Subtask) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             Button {
                 toggleSubtask(subtask.id)
             } label: {
                 ZStack {
                     RoundedRectangle(cornerRadius: 4)
-                        .strokeBorder(subtask.completed ? NookTheme.accent(colorScheme) : NookTheme.t4(colorScheme), lineWidth: 1.4)
+                        .strokeBorder(subtask.completed ? NookTheme.accent(colorScheme) : NookTheme.t4(colorScheme).opacity(0.7), lineWidth: 1.5)
                         .frame(width: 14, height: 14)
                     if subtask.completed {
                         RoundedRectangle(cornerRadius: 4)
                             .fill(NookTheme.accent(colorScheme))
                             .frame(width: 14, height: 14)
-                        NookIcon(.checkmark, size: 7)
+                        NookIcon(.checkmark, size: 8)
                             .foregroundStyle(NookTheme.tagOnFg(colorScheme))
                     }
                 }
@@ -300,8 +305,8 @@ struct TaskDetailView: View {
             .buttonStyle(.plain)
 
             Text(subtask.title)
-                .font(.nook(size: 12))
-                .foregroundStyle(subtask.completed ? NookTheme.t4(colorScheme) : NookTheme.t2(colorScheme))
+                .font(.nook(size: 13))
+                .foregroundStyle(subtask.completed ? NookTheme.t4(colorScheme) : NookTheme.t1(colorScheme))
                 .strikethrough(subtask.completed)
 
             Spacer()
@@ -309,13 +314,13 @@ struct TaskDetailView: View {
             Button {
                 deleteSubtask(subtask.id)
             } label: {
-                NookIcon(.x, size: 8)
+                NookIcon(.x, size: 9)
                     .foregroundStyle(NookTheme.t4(colorScheme))
             }
             .buttonStyle(.plain)
         }
-        .padding(.leading, 23)
-        .padding(.vertical, 5)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
     }
 
     private func loadState() {
@@ -384,6 +389,22 @@ struct TaskDetailView: View {
         if let color = store.tags[tag]?.color { return color }
         let scalarSum = tag.unicodeScalars.reduce(0) { $0 + Int($1.value) }
         return Store.tagColors[scalarSum % Store.tagColors.count]
+    }
+}
+
+/// Thin dashed horizontal line.
+/// SwiftUI doesn't have a native dashed Divider, so we draw a Path stroked with dash style.
+private struct DashedDivider: View {
+    let color: Color
+    var body: some View {
+        GeometryReader { geo in
+            Path { p in
+                p.move(to: CGPoint(x: 0, y: 0))
+                p.addLine(to: CGPoint(x: geo.size.width, y: 0))
+            }
+            .stroke(color, style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+        }
+        .frame(height: 1)
     }
 }
 
