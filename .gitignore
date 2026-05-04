@@ -64,3 +64,7 @@ recordings/
 
 # verify-ui screenshot output (本地视觉校验产物)
 verification/
+
+# Signing secrets (NEVER commit)
+NookSwift/release/.env.signing
+**/.env.signing

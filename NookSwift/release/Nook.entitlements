@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+        Nook 对 hardened runtime 的态度:严格,无例外。
+
+        - App Sandbox: OFF (省略本身就是 false)
+          理由:Nook 的核心交互是 hot corner,需要 CGEvent.tapCreate 这个全局事件 tap。
+          沙盒禁止该 API。所以 Nook 走 Developer ID + Notarization 路线,不走 Mac App Store。
+
+        - Hardened Runtime: ON (通过 codesign --options runtime 启用)
+          公证要求,且默认所有保护项全开。我们不需要任何 cs.* 例外。
+
+        - Apple Reminders 访问:通过 Info.plist 的 NSRemindersUsageDescription 声明,
+          运行时 EventKit 弹系统授权,不需要 entitlement。
+
+        - 辅助功能(Accessibility):用户首次使用 hot corner 时系统弹授权弹窗,
+          也不是 entitlement,是用户主动授予的权限。
+
+        所以这个文件保持空字典,代表"严格 hardened runtime + 无沙盒"。
+    -->
+</dict>
+</plist>
