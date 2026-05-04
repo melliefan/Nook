@@ -54,3 +54,10 @@ record.md
 logs/
 npm-debug.log*
 yarn-debug.log*
+
+# Website source recordings — raw .mov files for Screen Studio editing
+# (final web-friendly mp4 lives at website/assets/images/, that one IS tracked)
+website/assets/source-recordings/
+
+# seed-demo backups (real task snapshots while running demos)
+**/_demo_backups/
