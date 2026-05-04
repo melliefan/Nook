@@ -2,8 +2,8 @@
 """nooktodo — quick CLI for the Nook macOS panel.
 
 Writes to ~/Library/Application Support/Nook/data/tasks.json (the same store
-the Nook.app reads on launch). When Nook is running, it gets pkill'd and
-relaunched so the new task sticks.
+the Nook.app reads). Nook watches that directory via DispatchSource and
+auto-reloads on every external write — no app restart required.
 
 Usage examples:
   nooktodo "买牛奶"
@@ -34,17 +34,11 @@ import fcntl
 import json
 import os
 import re
-import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 STORE = Path.home() / "Library/Application Support/Nook/data/tasks.json"
-APP_NAME = "Nook"
-APP_PATH_HINTS = [
-    "/Users/mellie/Desktop/ME/便签app/NookSwift/build/Nook.app",
-    "/Applications/Nook.app",
-]
 PRIORITIES = ("high", "medium", "low", "none")
 
 
