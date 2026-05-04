@@ -56,29 +56,25 @@ struct SettingsPopoverView: View {
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
 
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 6) {
                 ForEach(corners, id: \.0) { corner, label in
                     Button {
                         store.updateCorner(corner)
                     } label: {
-                        VStack(spacing: 4) {
-                            cornerDiagram(corner)
-                            Text(label)
-                                .font(.nook(size: 11))
-                                .foregroundStyle(store.settings.cornerTrigger == corner ? .primary : .secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(store.settings.cornerTrigger == corner ? Color.primary.opacity(0.08) : Color.primary.opacity(0.04))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(store.settings.cornerTrigger == corner ? Color.primary.opacity(0.25) : Color.clear, lineWidth: 1.5)
-                        )
+                        cornerDiagram(corner)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(store.settings.cornerTrigger == corner ? Color.primary.opacity(0.08) : Color.primary.opacity(0.04))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .strokeBorder(store.settings.cornerTrigger == corner ? Color.primary.opacity(0.25) : Color.clear, lineWidth: 1.5)
+                            )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(label)
                 }
             }
 
