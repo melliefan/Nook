@@ -46,9 +46,9 @@ DEMO_TAGS = {
 }
 
 
-# ─── Active tasks(显示状态丰富,用于主截图 + hero 视频) ────────
+# ─── Active tasks ─ 全英文,丰富场景(books / dev tooling / personal / 工作) ─
 DEMO_TASKS = [
-    # 1. 高优 + today + 4 个 subtask + 描述 — 详情页主角
+    # 1. 高优 + today + 4 子任务 + 描述 — 详情页主角
     {
         "id": 2001,
         "title": "Ship Nook v1.0 to the world",
@@ -101,16 +101,16 @@ DEMO_TASKS = [
         "completedAt": None,
     },
 
-    # 4. 中优 + +3d + 多标签 — 跨标签场景
+    # 4. 中优 + +3d + 多标签 + 子任务 — 读书场景
     {
         "id": 2004,
         "title": "Re-read 'A Philosophy of Software Design' Ch. 5–7",
-        "description": "",
+        "description": "Re-reading after writing more macOS code than originally — curious if Ousterhout's modules-as-deep advice still hits the same.",
         "completed": False,
         "priority": "medium",
         "tags": ["Reading", "Side"],
         "subtasks": [
-            {"id": 1, "title": "Take notes on chapter 5: Information Hiding", "completed": False},
+            {"id": 1, "title": "Take notes on Ch.5: Information Hiding", "completed": False},
             {"id": 2, "title": "Try the refactor exercise on Nook codebase", "completed": False},
         ],
         "nextSubId": 3,
@@ -120,9 +120,25 @@ DEMO_TASKS = [
         "completedAt": None,
     },
 
-    # 5. 低优 + +7d — 个人琐事
+    # 5. 中优 + +5d — 读书场景 2
     {
         "id": 2005,
+        "title": "Finish 'Designing Data-Intensive Apps' Ch. 4 (Encoding)",
+        "description": "",
+        "completed": False,
+        "priority": "medium",
+        "tags": ["Reading"],
+        "subtasks": [],
+        "nextSubId": 1,
+        "dueDate": date_offset(5),
+        "listId": "inbox",
+        "createdAt": "2026-05-02T07:00:00Z",
+        "completedAt": None,
+    },
+
+    # 6. 低优 + +7d — 独立开发琐事
+    {
+        "id": 2006,
         "title": "Renew melliefan.com (Cloudflare auto-renew set to off)",
         "description": "",
         "completed": False,
@@ -136,10 +152,74 @@ DEMO_TASKS = [
         "completedAt": None,
     },
 
-    # 6. 无优先级 + 无日期 + 中文 — 展示 CJK + 简洁状态
+    # 7. 中优 + +2d — Dev tooling
     {
-        "id": 2006,
-        "title": "约理发 · 上次的发型师周三在",
+        "id": 2007,
+        "title": "Try Cursor 0.50 multi-edit on Nook codebase",
+        "description": "",
+        "completed": False,
+        "priority": "medium",
+        "tags": ["Side"],
+        "subtasks": [],
+        "nextSubId": 1,
+        "dueDate": date_offset(2),
+        "listId": "inbox",
+        "createdAt": "2026-05-03T22:00:00Z",
+        "completedAt": None,
+    },
+
+    # 8. 无优先级 + 无日期 — 学习
+    {
+        "id": 2008,
+        "title": "Watch 3Blue1Brown's intro to transformers",
+        "description": "",
+        "completed": False,
+        "priority": "none",
+        "tags": ["Reading"],
+        "subtasks": [],
+        "nextSubId": 1,
+        "dueDate": None,
+        "listId": "inbox",
+        "createdAt": "2026-05-04T08:00:00Z",
+        "completedAt": None,
+    },
+
+    # 9. 长标题 + 多标签 — 测试换行
+    {
+        "id": 2009,
+        "title": "Catch up on 'Hard Fork' podcast — last 4 episodes on AI agents",
+        "description": "",
+        "completed": False,
+        "priority": "none",
+        "tags": ["Reading"],
+        "subtasks": [],
+        "nextSubId": 1,
+        "dueDate": None,
+        "listId": "inbox",
+        "createdAt": "2026-05-04T09:00:00Z",
+        "completedAt": None,
+    },
+
+    # 10. 低优 + +14d — Personal 决策类
+    {
+        "id": 2010,
+        "title": "Cancel Notion sub, give Obsidian 30 days",
+        "description": "",
+        "completed": False,
+        "priority": "low",
+        "tags": ["Personal"],
+        "subtasks": [],
+        "nextSubId": 1,
+        "dueDate": date_offset(14),
+        "listId": "inbox",
+        "createdAt": "2026-05-04T10:00:00Z",
+        "completedAt": None,
+    },
+
+    # 11. 无优先级 + 无日期 — 朴素
+    {
+        "id": 2011,
+        "title": "Book a haircut — the stylist who actually gets it",
         "description": "",
         "completed": False,
         "priority": "none",
@@ -148,29 +228,13 @@ DEMO_TASKS = [
         "nextSubId": 1,
         "dueDate": None,
         "listId": "inbox",
-        "createdAt": "2026-05-02T08:00:00Z",
+        "createdAt": "2026-05-04T11:00:00Z",
         "completedAt": None,
     },
 
-    # 7. 无优先级 + 中文长标题 — 展示文字换行
+    # 12. 最朴素的状态 — 验证空属性渲染没问题
     {
-        "id": 2007,
-        "title": "调研:macOS 14+ AppKit/SwiftUI 互操作最新最佳实践",
-        "description": "",
-        "completed": False,
-        "priority": "none",
-        "tags": ["Reading", "Side"],
-        "subtasks": [],
-        "nextSubId": 1,
-        "dueDate": None,
-        "listId": "inbox",
-        "createdAt": "2026-05-03T19:00:00Z",
-        "completedAt": None,
-    },
-
-    # 8. 最朴素的状态 — 验证空属性渲染没问题
-    {
-        "id": 2008,
+        "id": 2012,
         "title": "Buy soy milk + sweet potatoes",
         "description": "",
         "completed": False,
@@ -186,7 +250,7 @@ DEMO_TASKS = [
 
     # ─── Completed (展示完成态视觉:删除线 + 灰色) ───
     {
-        "id": 2009,
+        "id": 2013,
         "title": "Submit weekly summary",
         "description": "",
         "completed": True,
@@ -200,7 +264,7 @@ DEMO_TASKS = [
         "completedAt": "2026-05-03T17:00:00Z",
     },
     {
-        "id": 2010,
+        "id": 2014,
         "title": "Cancel Linear annual subscription",
         "description": "",
         "completed": True,
@@ -212,6 +276,20 @@ DEMO_TASKS = [
         "listId": "inbox",
         "createdAt": "2026-04-30T15:00:00Z",
         "completedAt": "2026-05-02T10:00:00Z",
+    },
+    {
+        "id": 2015,
+        "title": "Read 'Hooked' by Nir Eyal",
+        "description": "",
+        "completed": True,
+        "priority": "none",
+        "tags": ["Reading"],
+        "subtasks": [],
+        "nextSubId": 1,
+        "dueDate": None,
+        "listId": "inbox",
+        "createdAt": "2026-04-25T08:00:00Z",
+        "completedAt": "2026-05-01T22:00:00Z",
     },
 ]
 
@@ -322,9 +400,9 @@ def cmd_status():
     n_tags = len(data.get("tags", {}))
     n_snippets = len(data.get("snippets", []))
 
-    # 启发式判断是不是 demo 状态:看 task IDs 是不是 2001-2010 范围
+    # 启发式判断是不是 demo 状态:看 task IDs 是不是 2001-2099 范围
     task_ids = {t.get("id") for t in data.get("tasks", [])}
-    is_demo = task_ids and task_ids.issubset(set(range(2001, 2011)))
+    is_demo = task_ids and task_ids.issubset(set(range(2001, 2100)))
     state = "📦 DEMO" if is_demo else "👤 REAL"
     print(f"current store: {state}")
     print(f"  {n_tasks} tasks · {n_tags} tags · {n_snippets} snippets")
