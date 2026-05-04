@@ -171,10 +171,10 @@ func testTaskPriority() {
     checkEqual(NookTask.Priority.low.order, 2, "Low priority order = 2")
     checkEqual(NookTask.Priority.none.order, 3, "None priority order = 3")
 
-    checkEqual(NookTask.Priority.high.color, "#EB4D3D", "High color")
-    checkEqual(NookTask.Priority.medium.color, "#FF9A14", "Medium color")
-    checkEqual(NookTask.Priority.low.color, "#4B7BEC", "Low color")
-    checkEqual(NookTask.Priority.none.color, "#B8B8B8", "None color")
+    checkEqual(NookTask.Priority.high.color, "#FF3B30", "High color")
+    checkEqual(NookTask.Priority.medium.color, "#FF9500", "Medium color")
+    checkEqual(NookTask.Priority.low.color, "#34C759", "Low color")
+    checkEqual(NookTask.Priority.none.color, "#8E8E93", "None color")
 
     checkEqual(NookTask.Priority.high.label, "高优先级", "High label")
 
