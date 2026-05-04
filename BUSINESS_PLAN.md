@@ -34,7 +34,7 @@
 | **产品** | Nook · macOS 待办面板,鼠标撞角呼出 |
 | **市场** | 海外为主(欧美 + 日韩 + 全球英文)+ 国内小红书副线 |
 | **定价** | $9 一次性买断(永久许可) |
-| **收款** | Paddle (Merchant of Record) + Setapp 订阅分成 |
+| **收款** | Lemon Squeezy(主,Merchant of Record)+ Paddle(备)+ Setapp(副渠道) |
 | **主体** | 现阶段个人 → 月入 ≥ $3K 后注册个体工商户 |
 | **GTM** | Hacker News + Product Hunt + Reddit r/macapps + Setapp + 小红书 |
 | **税务** | 海外 Paddle 已扣税,国内每年 3.31 自行申报 |
@@ -326,40 +326,48 @@ Setapp 用户:                  $0(包含在 $9.99/月 订阅里)
 
 ## 6. 收款基建
 
-### 6.1 Paddle (主推荐)
+### 6.1 Lemon Squeezy (主推荐)
 
-**类型**: Merchant of Record (法律意义上的卖家)
+**类型**: Merchant of Record (法律意义上的卖家),2024 被 Stripe 收购,背景更稳
+
+**为什么是它而不是 Paddle:**
+- ✅ **License key 自动发放原生支持** — Paddle 要自己写后端,LS 配置即可省 1 周开发
+- ✅ **中国个人 KYC 友好** — Paddle 近年对个人 indie 偏保守,LS 主流接受
+- ✅ **后台 UX 现代清爽** — Paddle 是企业 SaaS 起家,UI 工程化重
+- ✅ **indie devs 主流首选** — 近 1-2 年新起 Mac indie 案例多用它
+- ⚖️ 手续费**完全一致**(5% + $0.50)
 
 **优势:**
 - 中国大陆个人银行卡直接收款(招行/中行/工行)
 - 全球 200+ 国家自动处理 VAT/GST/Sales Tax
 - 自动开发票给买家(你不需要管)
+- 内置 license key 生成+发邮件流程
 - 7-30 天打款周期到你银行卡
 
 **手续费:**
-- 5% + $0.5 / 单
-- $9 单 → 你实收 ~$8.05
+- 5% + $0.50 / 单
+- $9 单 → 实收 ~$8.05(91% 保留率,实际 9% 综合费率,不是 5%)
 
 **注册流程:**
-1. https://paddle.com 注册账号
-2. KYC: 上传身份证 / 护照 / 地址证明
-3. 填 W-8BEN 表(免美国 30% 预扣税)
-4. 绑定中国银行卡 + 选 USD/CNY 收款
-5. 审核 1-3 天
-6. 通过后接入 Paddle.js 或托管支付页
+1. https://www.lemonsqueezy.com/sign-up
+2. 创建 Store 名(填 "melliefan",未来多产品共用)
+3. KYC: 上传身份证 + 银行账户 + 地址证明
+4. 填 W-8BEN 表(免美国 30% 预扣税)
+5. 创建第一个产品 "Nook" $9 一次性
+6. 配置 license key 模板 + 邮件模板
+7. 审核 1-3 天
 
 **集成方式 (推荐):**
-- 网站直接放 Paddle 托管支付链接
-- 用户点击 → 跳转 Paddle 收银台 → 完成支付 → 邮件发 license key
+- 网站直接放 LS Checkout 链接
+- 用户点击 → 跳转 LS 收银台 → 付款 → LS 自动生成 license + 发邮件
 - 不需要后端,纯前端集成
 
-### 6.2 Lemon Squeezy (备用)
+### 6.2 Paddle (备用)
 
-- Paddle 替代品(2024 被 Stripe 收购,背景更稳)
-- 操作类似 Paddle
-- 5% + $0.5 / 单
-- 中国卖家友好度更高(后台 UI/UX 更现代)
-- 备选预案: Paddle 注册不通过时切换
+- 注册时同步申请,作为 LS KYC 不通过时的预案
+- 同样 MoR 模式,同样手续费 5% + $0.50
+- License key 要自己接入 webhook + 后端(多 1 周开发)
+- 老牌、稳定性强但 UI 偏企业感
 
 ### 6.3 Setapp (副渠道)
 
@@ -795,7 +803,7 @@ M12:                      $5000-10000
 | 2026-05-04 | 不买 melliefan.com,用 github.io 免费 | 个人站不需要包装,产品才需独立域名 |
 | 2026-05-04 | 主市场:海外;副市场:国内小红书 | 国内 macOS 几乎不付费,海外是真实市场 |
 | 2026-05-04 | 商业模式:$9 一次性买断 + Setapp 副渠道 | HN/PH 用户对订阅疲劳极度反感,工具类适合一次性 |
-| 2026-05-04 | 收款:Paddle (主) + Lemon Squeezy (备) | MoR 模式让中国 indie 出海最简化 |
+| 2026-05-04 | 收款:**Lemon Squeezy (主) + Paddle (备)** + Setapp (副) | LS 原生 license key 发放 + 中国个人 KYC 更友好;同等手续费下 LS 对 Nook 这个 case 更匹配。原计划是 Paddle 主,经过 review 调整为 LS 主 |
 | 2026-05-04 | 主体:个人 → 月收 $3K 后注册个体工商户 | 阶段化匹配,不超前投入 |
 | 2026-05-04 | 售后:Email + GitHub Issues,不开 Discord | 1K 用户以下 Discord 是负担 |
 | 2026-05-04 | Nook i18n 推迟到 v1.5 后 | 116 条硬编码字符串,先发英文友好(品牌名+关键 UI 易懂)+用截图传达 |
