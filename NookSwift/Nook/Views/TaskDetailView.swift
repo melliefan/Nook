@@ -30,7 +30,7 @@ struct TaskDetailView: View {
         VStack(spacing: 0) {
             detailHeader
             ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 18) {
                     editorFields
                     metaCard
                     tagCard
@@ -153,8 +153,6 @@ struct TaskDetailView: View {
 
             Spacer()
         }
-        .padding(12)
-        .background(NookTheme.bg2(colorScheme), in: RoundedRectangle(cornerRadius: 10))
     }
 
     /// Inline label-style field (no chip background) — for use inside cards.
@@ -203,9 +201,7 @@ struct TaskDetailView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(NookTheme.bg2(colorScheme), in: RoundedRectangle(cornerRadius: 10))
     }
 
     /// Subtasks card: header "SUBTASKS" + count → rows → white-bg input row
@@ -230,7 +226,7 @@ struct TaskDetailView: View {
                 subtaskRow(subtask)
             }
 
-            // Add input — white bg with thin border (per plan B HTML)
+            // Add input — light fill on white parent for subtle visual hint
             HStack(spacing: 10) {
                 Image(systemName: "plus")
                     .font(.system(size: 11, weight: .medium))
@@ -243,16 +239,10 @@ struct TaskDetailView: View {
                     .onSubmit { addSubtask() }
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .background(NookTheme.bg(colorScheme), in: RoundedRectangle(cornerRadius: 6))
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .strokeBorder(NookTheme.line(colorScheme), lineWidth: 1)
-            )
+            .padding(.vertical, 7)
+            .background(NookTheme.bg2(colorScheme).opacity(0.6), in: RoundedRectangle(cornerRadius: 6))
             .padding(.top, 4)
         }
-        .padding(12)
-        .background(NookTheme.bg2(colorScheme), in: RoundedRectangle(cornerRadius: 10))
     }
 
     private var displayedSubtasks: [Subtask] {

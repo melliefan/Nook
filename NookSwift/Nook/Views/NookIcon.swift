@@ -102,8 +102,9 @@ private enum NookIconStore {
         case .checkmark:
             return #"<path fill="black" fill-rule="evenodd" d="M20.53 5.47a.75.75 0 0 1 0 1.06l-10.5 10.5a.75.75 0 0 1-1.06 0l-5.5-5.5a.75.75 0 1 1 1.06-1.06l4.97 4.97L19.47 5.47a.75.75 0 0 1 1.06 0" clip-rule="evenodd"/>"#
         case .sidebarLeft:
-            // 双 chevron «« — sidebar 收起的国际通用图标
-            return #"<path fill="black" fill-rule="evenodd" d="M11.53 5.47a.75.75 0 0 1 0 1.06L6.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0" clip-rule="evenodd"/><path fill="black" fill-rule="evenodd" d="M18.53 5.47a.75.75 0 0 1 0 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0" clip-rule="evenodd"/>"#
+            // 双 chevron «« — chunky 加粗版,跟 pin/sort/gear 视觉权重对齐
+            // 原 stroke 1.06px → 1.41px (+33%)
+            return #"<path fill="black" fill-rule="evenodd" d="M11.41 4.59a1 1 0 0 1 0 1.41L5.41 12l6 6a1 1 0 1 1-1.41 1.41l-6.71-6.71a1 1 0 0 1 0-1.41l6.71-6.71a1 1 0 0 1 1.41 0" clip-rule="evenodd"/><path fill="black" fill-rule="evenodd" d="M18.41 4.59a1 1 0 0 1 0 1.41L12.41 12l6 6a1 1 0 1 1-1.41 1.41l-6.71-6.71a1 1 0 0 1 0-1.41l6.71-6.71a1 1 0 0 1 1.41 0" clip-rule="evenodd"/>"#
         }
     }
 }

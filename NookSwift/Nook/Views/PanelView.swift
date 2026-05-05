@@ -196,7 +196,7 @@ struct HeaderView: View {
                     .popover(isPresented: $showSettings, arrowEdge: .bottom) {
                         SettingsPopoverView(store: store)
                     }
-                    headerButton(icon: .sidebarLeft, size: 14) {
+                    headerButton(icon: .sidebarLeft, size: 16) {
                         panelController.isPinned = false
                         panelController.hide()
                     }
